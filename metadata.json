@@ -1,6 +1,0 @@
-{
-  "name": "ROLY B2B & B2C Textile Commerce Platform",
-  "description": "Authentic full-featured replica of roly.eu with customer portal, product variation matrix, live customizer, packing list and invoice generator, order tracking, admin portal, and MySQL database setup wizard.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
