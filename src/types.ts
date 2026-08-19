@@ -12,6 +12,7 @@ export interface AppUser {
   isBootstrapOwner: boolean;
   createdAt: string;
   lastLogin?: string;
+  passwordConfigured?: boolean;
 }
 
 export interface CatalogSubcategory {
@@ -52,6 +53,7 @@ export interface HomeHeroSlide extends HomeContentCard {
   eyebrow: string;
   textColor: 'light' | 'dark';
   showContent?: boolean;
+  videoUrl?: string;
 }
 
 export interface HomeVideoSlide {
@@ -87,6 +89,7 @@ export interface SiteSettings {
   heroSubhead: string;
   heroDescription: string;
   footerDescription: string;
+  footerCopyrightText: string;
   primaryColor: string;
   allowMultiVendor: boolean;
   logoUrl: string;

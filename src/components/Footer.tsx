@@ -47,7 +47,7 @@ export const Footer: React.FC = () => {
 
       <div className="border-t border-neutral-800">
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-6 py-5 text-[10px] text-neutral-500 sm:flex-row sm:items-center sm:justify-between sm:px-10">
-          <span>© {new Date().getFullYear()} {siteSettings.companyName}. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} {siteSettings.companyName}. {siteSettings.footerCopyrightText}</span>
           <span>{siteSettings.address}</span>
         </div>
       </div>

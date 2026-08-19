@@ -78,6 +78,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   heroSubhead: 'Discover our latest collection',
   heroDescription: 'Casual wear, sportswear, work clothing and trainers designed for every day.',
   footerDescription: 'Every year we work on the innovation and improvement of our collections, combining design, comfort and durability.',
+  footerCopyrightText: 'All rights reserved.',
   primaryColor: '#f5a900',
   allowMultiVendor: true,
   logoUrl: '',
@@ -90,6 +91,17 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   ],
   heroSlides: [
     {
+      id: 'hero-back-to-school',
+      eyebrow: 'BACK TO SCHOOL!',
+      title: 'Start the school year with everything ready',
+      description: 'Roly & Stamina have everything the little ones need to start the year with strength and energy.',
+      imageUrl: 'https://static.gorfactory.es/images/home/VER_ESCRITORIO_VUEL_ALCOLE.jpg',
+      target: 'category:featured_roly',
+      ctaLabel: 'DISCOVER',
+      textColor: 'light',
+      showContent: true,
+    },
+    {
       id: 'hero-exhibitions',
       eyebrow: '',
       title: 'Upcoming Exhibitions 2026',
@@ -101,22 +113,12 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
       showContent: false,
     },
     {
-      id: 'hero-summer-workwear',
-      eyebrow: 'ROLY WORK',
-      title: 'The perfect uniform for the summer season.',
-      description: 'Comfortable workwear designed for warm working days.',
-      imageUrl: 'https://static.gorfactory.es/images/home/VER_ESCRITORIO_VUEL_ALCOLE.jpg',
-      target: 'category:workwear',
-      ctaLabel: 'DISCOVER',
-      textColor: 'light',
-      showContent: true,
-    },
-    {
       id: 'hero-attitude',
       eyebrow: 'NEW COLLECTION',
       title: 'Attitude. Origin. Inspiration.',
       description: 'Discover our new collection',
       imageUrl: 'https://static.gorfactory.es/images/home/Banners_novedades_2026.jpg',
+      videoUrl: 'https://static.gorfactory.es/images/home/ROLY_Intro_2026.mp4?v=2',
       target: 'category:novelty_roly',
       ctaLabel: 'NOVELTIES',
       textColor: 'light',
@@ -348,7 +350,8 @@ interface StoreContextType {
   userRole: UserRole;
   currentUser: AppUser;
   users: AppUser[];
-  registerClient: (user: Pick<AppUser, 'name' | 'email' | 'company'>) => void;
+  registerClient: (user: Pick<AppUser, 'name' | 'email' | 'company'> & { password: string }) => boolean;
+  resetUserPassword: (userId: string, password: string) => boolean;
   updateUserRole: (userId: string, role: UserRole) => boolean;
   updateUserStatus: (userId: string, status: AppUser['status']) => boolean;
 
@@ -494,10 +497,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return [...requiredNavigation, ...customNavigation];
         })(),
         heroSlides: (() => {
-          const savedSlides = (parsed.heroSlides || []).filter((slide) => slide.id !== 'hero-workwear');
-          const requiredSlides = DEFAULT_SITE_SETTINGS.heroSlides.map((defaultSlide) => savedSlides.find((slide) => slide.id === defaultSlide.id) || defaultSlide);
+          const obsoleteHeroIds = new Set(['hero-workwear', 'hero-summer-workwear']);
+          const savedSlides = (parsed.heroSlides || []).filter((slide) => !obsoleteHeroIds.has(slide.id));
+          const requiredSlides = DEFAULT_SITE_SETTINGS.heroSlides.map((defaultSlide) => {
+            const savedSlide = savedSlides.find((slide) => slide.id === defaultSlide.id);
+            return savedSlide ? { ...defaultSlide, ...savedSlide } : defaultSlide;
+          });
           const customSlides = savedSlides.filter((slide) => !DEFAULT_SITE_SETTINGS.heroSlides.some((defaultSlide) => defaultSlide.id === slide.id));
-          return [...requiredSlides, ...customSlides];
+          const slides = [...requiredSlides, ...customSlides];
+          if (slides[0]?.imageUrl && slides[1]?.imageUrl && slides[0].imageUrl === slides[1].imageUrl) {
+            slides[0] = { ...slides[0], imageUrl: DEFAULT_SITE_SETTINGS.heroSlides[0].imageUrl };
+            slides[1] = { ...slides[1], imageUrl: DEFAULT_SITE_SETTINGS.heroSlides[1].imageUrl };
+          }
+          return slides;
         })(),
         audienceCards: parsed.audienceCards || DEFAULT_SITE_SETTINGS.audienceCards,
         latestBanners: parsed.latestBanners || DEFAULT_SITE_SETTINGS.latestBanners,
@@ -686,22 +698,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast('Main menu and submenus synced from categories', 'success');
   };
 
-  const registerClient = (userData: Pick<AppUser, 'name' | 'email' | 'company'>) => {
+  const registerClient = (userData: Pick<AppUser, 'name' | 'email' | 'company'> & { password: string }): boolean => {
     const normalizedEmail = userData.email.trim().toLowerCase();
     if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
       showToast('A user with this email already exists', 'error');
-      return;
+      return false;
     }
+    if (userData.password.length < 8) {
+      showToast('Password must contain at least 8 characters', 'error');
+      return false;
+    }
+    const { password, ...safeUserData } = userData;
+    void password; // Plain-text passwords must never enter localStorage or the user list.
     setUsers((current) => [...current, {
-      ...userData,
+      ...safeUserData,
       email: normalizedEmail,
       id: `user-${Date.now()}`,
       role: 'client',
       status: 'active',
       isBootstrapOwner: false,
+      passwordConfigured: true,
       createdAt: new Date().toISOString().split('T')[0],
     }]);
     showToast('User registered as Client. An administrator can change the role later.', 'success');
+    return true;
+  };
+
+  const resetUserPassword = (userId: string, password: string): boolean => {
+    const target = users.find((user) => user.id === userId);
+    if (!target) return false;
+    if (password.length < 8) {
+      showToast('Password must contain at least 8 characters', 'error');
+      return false;
+    }
+    setUsers((current) => current.map((user) => user.id === userId ? { ...user, passwordConfigured: true } : user));
+    showToast(`Password reset prepared for ${target.name}. The production PHP API will store only its hash.`, 'success');
+    return true;
   };
 
   const updateUserRole = (userId: string, role: UserRole): boolean => {
@@ -894,6 +926,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentUser,
         users,
         registerClient,
+        resetUserPassword,
         updateUserRole,
         updateUserStatus,
         catalogCategories,

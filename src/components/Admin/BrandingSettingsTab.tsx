@@ -20,6 +20,7 @@ export const BrandingSettingsTab: React.FC = () => {
   const [heroSubhead, setHeroSubhead] = useState(siteSettings.heroSubhead);
   const [heroDescription, setHeroDescription] = useState(siteSettings.heroDescription);
   const [footerDescription, setFooterDescription] = useState(siteSettings.footerDescription);
+  const [footerCopyrightText, setFooterCopyrightText] = useState(siteSettings.footerCopyrightText);
   const [logoUrl, setLogoUrl] = useState(siteSettings.logoUrl);
   const [faviconUrl, setFaviconUrl] = useState(siteSettings.faviconUrl);
   const [primaryColor, setPrimaryColor] = useState(siteSettings.primaryColor);
@@ -42,6 +43,7 @@ export const BrandingSettingsTab: React.FC = () => {
       heroSubhead,
       heroDescription,
       footerDescription,
+      footerCopyrightText,
       logoUrl,
       faviconUrl,
       primaryColor,
@@ -66,6 +68,7 @@ export const BrandingSettingsTab: React.FC = () => {
       setHeroSubhead(DEFAULT_SITE_SETTINGS.heroSubhead);
       setHeroDescription(DEFAULT_SITE_SETTINGS.heroDescription);
       setFooterDescription(DEFAULT_SITE_SETTINGS.footerDescription);
+      setFooterCopyrightText(DEFAULT_SITE_SETTINGS.footerCopyrightText);
       setLogoUrl(DEFAULT_SITE_SETTINGS.logoUrl);
       setFaviconUrl(DEFAULT_SITE_SETTINGS.faviconUrl);
       setPrimaryColor(DEFAULT_SITE_SETTINGS.primaryColor);
@@ -337,7 +340,7 @@ export const BrandingSettingsTab: React.FC = () => {
             <span>4. Footer Text & Brand Overview</span>
           </h3>
 
-          <div>
+          <div className="space-y-4">
             <label className="block text-xs font-bold text-neutral-700 mb-1">
               Footer Description Paragraph:
             </label>
@@ -347,6 +350,17 @@ export const BrandingSettingsTab: React.FC = () => {
               onChange={(e) => setFooterDescription(e.target.value)}
               className="w-full border border-neutral-300 rounded-lg px-3 py-2 text-xs text-neutral-900 outline-none focus:border-black resize-none"
             />
+            <div>
+              <label className="mb-1 block text-xs font-bold text-neutral-700">Copyright text after company name:</label>
+              <input
+                type="text"
+                value={footerCopyrightText}
+                onChange={(e) => setFooterCopyrightText(e.target.value)}
+                placeholder="All rights reserved."
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs text-neutral-900 outline-none focus:border-black"
+              />
+              <p className="mt-1 text-[10px] text-neutral-500">The year updates automatically. Company name and address are managed in section 3 above.</p>
+            </div>
           </div>
         </div>
 

@@ -86,10 +86,16 @@ export const HomePage: React.FC = () => {
             className="group relative block h-[36vw] min-h-[310px] max-h-[680px] w-full overflow-hidden text-left"
             aria-label={`${currentHero.title}: ${currentHero.ctaLabel || 'Discover'}`}
           >
-            <div
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-[1600ms] group-hover:scale-[1.015]"
-              style={imageStyle(currentHero.imageUrl)}
-            />
+            {currentHero.videoUrl ? (
+              <video key={currentHero.videoUrl} autoPlay muted loop playsInline preload="metadata" poster={currentHero.imageUrl} className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1600ms] group-hover:scale-[1.015]">
+                <source src={currentHero.videoUrl} type="video/mp4" />
+              </video>
+            ) : (
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-[1600ms] group-hover:scale-[1.015]"
+                style={imageStyle(currentHero.imageUrl)}
+              />
+            )}
             {currentHero.showContent !== false && <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/5 to-transparent" />}
             {currentHero.showContent !== false && <div className={`absolute bottom-[12%] left-[7%] max-w-xl ${currentHero.textColor === 'dark' ? 'text-black' : 'text-white'}`}>
               <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-xs">
