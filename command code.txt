@@ -1,0 +1,585 @@
+isnt it the whole page? also attached the html , is it matched your html?
+clientr area are as the customer , so admin control panel are the main to add stock and other, no, the admin controlpanel, there must be all controll for stock entry, with image and colour, this will be selct while stock entry, and product code that must e customisabele. and if select big size le xl,xxl xxxl etc then product code will auto add a code in the last "-BIG", order processing all steps from the client are given, payment gateway setup all thinngs need, and also full websites each and every element , site logo, brand footer logo descripton all need to be customisable from admin section. as a experiences devloper think all othrer missing what i forgot then aldd all that
+
+
+html that i captured for index page i mean main page: "C:\Users\Rabbie\Downloads\Casual wear, sportswear, work clothing and trainers ｜ Roly (8_18_2026 12：01：08 PM).html"
+
+and some prompt i made from there may be wrong, but you can take reference 
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #EEEEEE · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #EEEEEE surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Cairo 14px 400, 1.6 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #222222
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Cairo 14px 400, 1.6 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #FFFFFF
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Cairo 14px 400, 1.6 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #FFFFFF
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Cairo 14px 400, 1.6 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #FFFFFF
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Outfit 20px 400, 1.25 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #FFFFFF
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Outfit 20px 400, 1.25 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #666666
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Outfit 20px 400, 1.25 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #FFFFFF
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Outfit 20px 400, 1.25 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #FFFFFF
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+This is a design system extracted from a webpage I find inspiring. I want to build my own site/app UI inspired by this design pattern. Do not copy or replicate brand assets, logos, or identity — use these tokens as a foundation to create something original for me. Match the design language, not the brand:
+
+Vibe: vibrant · rounded
+Rhythm: 4px grid · very rounded · tight line-height (1) · flat (no shadows)
+
+Key colors: Accent: #3D107F · Background: #FFFFFF · Text: #222222
+
+Full palette: #3D107F primary, #310D66 accent, #FFFFFF surface, #EEEEEE elevated, #222222 text, #666666 muted
+
+Typography:
+• H1 — Outfit 56px 600, 1 line-height
+• H2 — Outfit 46px 200, 1 line-height
+• H4 — Outfit 24px 200, 1 line-height
+• Body — Outfit 20px 400, 1.25 line-height
+• Type scale — 56px / 35px / 14px
+
+Tokens:
+• Radius — 50px buttons, pill inputs
+• Radius vocabulary — button:5px, input:pill
+• Spacing scale — 4,8,12,16,20,28,32,60,112
+• Border color — #999999
+
+Named color tokens (from CSS custom properties):
+• --vs-disabled-bg: #f8f8f8
+• --vs-disabled-color: rgba(60,60,60,.5)
+• --yellow-workwear: #ffbd00
+• --blue-sport: #08f
+• --green-eco: #64a644
+
+Motion tokens:
+• vs-transition-timing-function: cubic-bezier(1,0.5,0.8,1)
+• vs-transition-duration: 0.15s
+
+Components:
+• Button — #FFFFFF bg, #3D107F text, 50px radius, 16px 32px padding, 500 weight
+• Card — 14px padding
+• Input — #EEEEEE bg, 1px solid #999999, 999px radius
+• Link — #808080
+
+Responsive breakpoints: 1px, 200px, 290px, 337px, 340px, 351px, 360px, 390px
+
+Layout grid: max-width 1905px, 14px gutter
+Spacing scale: 4px / 8px / 12px / 16px / 20px / 28px / 32px / 60px / 112px
+Focus ring: 0px
+
+Interaction states:
+• hover — translateX(0px), shadow rgba(0, 0, 0, 0.2) 0px 13px 20px -10px, opacity 0
+• active — translateX(0px), opacity 1
+• focus — 0px
+
+Z-index layers: notification: 1 → nav: 5000 → element: 9999 → dropdown: 10001
+
+Responsive component changes:
+• at 2700px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1690px — .slider .intro-slide2 .banner-content .home-butt → font-size: 18px
+• at 1653px — .intro-slide1 .banner-content-news .banner-body  → font-size: 25px
+• at 1440px — .slider .home-button-slider → font-size: 14px
+• at 1440px — .slider .intro-slide0 .banner-content .home-butt → font-size: 14px
+• at 1440px — .slider .intro-slide2 .banner-content .home-butt → font-size: 14px
+
+Attach the screenshot from this page as a visual reference — match its hierarchy, density, and overall feel, not just the raw values. Where this brief leaves something underspecified (hover states, focus rings, dark-mode variants), infer sensible defaults consistent with the vibe and palette above.
+
+This is for my personal project — I'm drawing inspiration from this design pattern to build my own UI. Create something original that follows these design principles without copying the source brand.
+
+and live url is roly.eu for live reference ,ue it first. and some work are already done, check first then complete the wortk, and complete other thing if i forgot it, 

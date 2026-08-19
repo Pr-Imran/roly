@@ -13,13 +13,15 @@ import { ClientArea } from './components/ClientArea/ClientArea';
 import { AdminPortal } from './components/Admin/AdminPortal';
 import { StaticPages } from './components/Pages/StaticPages';
 import { InvoicePackingModal } from './components/ClientArea/InvoicePackingModal';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { LanguageTranslator } from './i18n/LanguageTranslator';
 
 const MainApp: React.FC = () => {
-  const { activePage, toast, isDocumentModalOpen, showMySQLModal, setShowMySQLModal } = useStore();
+  const { activePage, toast, activeDocumentModal, language } = useStore();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfbfb] text-gray-900 selection:bg-black selection:text-white">
+      <LanguageTranslator language={language} />
       {/* Toast Notification Alert */}
       {toast && (
         <div className="fixed top-4 right-4 z-50 transition-all transform animate-in fade-in duration-200">
@@ -58,7 +60,7 @@ const MainApp: React.FC = () => {
       </main>
 
       {/* Printable Invoice / Packing List Modal */}
-      {isDocumentModalOpen && <InvoicePackingModal />}
+      {activeDocumentModal.isOpen && <InvoicePackingModal />}
 
       {/* Global Footer */}
       <Footer />

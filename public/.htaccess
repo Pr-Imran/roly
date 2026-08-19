@@ -1,0 +1,13 @@
+Options -Indexes
+RewriteEngine On
+
+# Allow PHP API endpoints, uploaded media and real frontend assets/files.
+RewriteRule ^api/ - [L]
+RewriteRule ^uploads/ - [L]
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# React single-page fallback.
+RewriteRule ^ index.html [L]
+

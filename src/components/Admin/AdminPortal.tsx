@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore, AdminTab } from '../../context/StoreContext';
 import { 
   LayoutDashboard, 
@@ -23,12 +23,22 @@ import {
   Server,
   Users,
   Building,
-  Crown
+  Crown,
+  CreditCard,
+  Warehouse,
+  X
 } from 'lucide-react';
-import { Product } from '../../types';
-import { CATEGORIES } from '../../data/mockProducts';
+import { ColorSwatch, Product } from '../../types';
 import { BrandingSettingsTab } from './BrandingSettingsTab';
 import { VendorsTab } from './VendorsTab';
+import { CommerceSettingsTab } from './CommerceSettingsTab';
+import { SiteContentTab } from './SiteContentTab';
+import { UserRolesTab } from './UserRolesTab';
+
+const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const BIG_SIZE_NAMES = new Set(['XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL', '5XL']);
+const isBigSize = (size: string) => BIG_SIZE_NAMES.has(size.trim().toUpperCase().replace(/\s+/g, ''));
+const variantSku = (modelCode: string, size: string) => `${modelCode.trim().toUpperCase().replace(/-BIG$/i, '')}${isBigSize(size) ? '-BIG' : ''}`;
 
 export const AdminPortal: React.FC = () => {
   const {
@@ -43,8 +53,8 @@ export const AdminPortal: React.FC = () => {
     openDocumentModal,
     siteSettings,
     vendors,
-    userRole,
-    setUserRole,
+    currentUser,
+    catalogCategories,
     showToast,
   } = useStore();
 
@@ -58,7 +68,7 @@ export const AdminPortal: React.FC = () => {
   const [formSubtitle, setFormSubtitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formVendorId, setFormVendorId] = useState('');
-  const [formCategory, setFormCategory] = useState(CATEGORIES[0].name);
+  const [formCategory, setFormCategory] = useState(catalogCategories[0]?.name || 'Uncategorized');
   const [formGsm, setFormGsm] = useState(150);
   const [formComposition, setFormComposition] = useState('100% single jersey cotton');
   const [formGender, setFormGender] = useState<'Unisex' | 'Men' | 'Women' | 'Kids'>('Unisex');
@@ -67,7 +77,7 @@ export const AdminPortal: React.FC = () => {
   const [formPriceBox, setFormPriceBox] = useState(1.85);
   const [formPackQty, setFormPackQty] = useState(10);
   const [formBoxQty, setFormBoxQty] = useState(100);
-  const [formColors, setFormColors] = useState<{ name: string; code: string; hex: string }[]>([
+  const [formColors, setFormColors] = useState<ColorSwatch[]>([
     { name: '01 White', code: '01', hex: '#FFFFFF' },
     { name: '02 Black', code: '02', hex: '#1C1C1C' },
     { name: '60 Navy', code: '60', hex: '#1E293B' },
@@ -75,14 +85,29 @@ export const AdminPortal: React.FC = () => {
   const [formImages, setFormImages] = useState<string[]>([
     'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'
   ]);
+  const [formSizes, setFormSizes] = useState<string[]>(['S', 'M', 'L', 'XL', '2XL']);
+  const [formStockMatrix, setFormStockMatrix] = useState<Record<string, Record<string, number>>>({});
+  const [newSize, setNewSize] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [formFeatures, setFormFeatures] = useState('High durability\nOeko-Tex Standard 100\nReinforced seams\nRemovable label');
+  const [formFlags, setFormFlags] = useState({ isEco: false, isNew: true, isHighVis: false, isWorkwear: false, isOutlet: false, oekoTexCertified: true });
+
+  useEffect(() => {
+    if (!isNewProductModalOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsNewProductModalOpen(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isNewProductModalOpen]);
 
   // MySQL Form State
-  const [dbHost, setDbHost] = useState(mysqlConfig.host);
-  const [dbPort, setDbPort] = useState(mysqlConfig.port);
   const [dbName, setDbName] = useState(mysqlConfig.database);
-  const [dbUser, setDbUser] = useState(mysqlConfig.user);
-  const [dbPassword, setDbPassword] = useState(mysqlConfig.password);
-  const [dbSsl, setDbSsl] = useState(mysqlConfig.ssl);
   const [isTestingDb, setIsTestingDb] = useState(false);
 
   // Storage Optimization stats
@@ -94,7 +119,7 @@ export const AdminPortal: React.FC = () => {
     setFormModelCode(`CA${Math.floor(1000 + Math.random() * 9000)}`);
     setFormName('NEW ROLY MODEL');
     setFormSubtitle('High-performance textile garment');
-    setFormCategory(CATEGORIES[0].name);
+    setFormCategory(catalogCategories[0]?.name || 'Uncategorized');
     setFormGsm(180);
     setFormComposition('100% Combed ring-spun cotton');
     setFormGender('Unisex');
@@ -103,7 +128,74 @@ export const AdminPortal: React.FC = () => {
     setFormPriceBox(2.60);
     setFormPackQty(10);
     setFormBoxQty(100);
+    setFormDescription('');
+    setFormVendorId('');
+    setFormFeatures('High durability\nOeko-Tex Standard 100\nReinforced seams\nRemovable label');
+    setFormFlags({ isEco: false, isNew: true, isHighVis: false, isWorkwear: false, isOutlet: false, oekoTexCertified: true });
+    const colors: ColorSwatch[] = [
+      { name: '01 White', code: '01', hex: '#FFFFFF', image: '' },
+      { name: '02 Black', code: '02', hex: '#1C1C1C', image: '' },
+    ];
+    const sizes = ['S', 'M', 'L', 'XL', '2XL'];
+    setFormColors(colors);
+    setFormSizes(sizes);
+    setFormImages(['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80']);
+    setFormStockMatrix(Object.fromEntries(colors.map((color) => [color.name, Object.fromEntries(sizes.map((size) => [size, 0]))])));
     setIsNewProductModalOpen(true);
+  };
+
+  const openEditProductModal = (product: Product) => {
+    setEditingProduct(product);
+    setFormModelCode(product.modelCode);
+    setFormName(product.name);
+    setFormSubtitle(product.subtitle || '');
+    setFormDescription(product.description || '');
+    setFormVendorId(product.vendorId || '');
+    setFormCategory(product.category);
+    setFormGsm(product.weightGsm);
+    setFormComposition(product.composition);
+    setFormGender(product.gender);
+    setFormPriceUnit(product.priceUnit);
+    setFormPricePack(product.pricePack);
+    setFormPriceBox(product.priceBox);
+    setFormPackQty(product.packQuantity);
+    setFormBoxQty(product.boxQuantity);
+    setFormColors(product.colors);
+    setFormImages(product.images);
+    setFormSizes(product.sizes);
+    setFormStockMatrix(product.stockMatrix);
+    setFormFeatures(product.features.join('\n'));
+    setFormFlags({
+      isEco: Boolean(product.isEco),
+      isNew: Boolean(product.isNew),
+      isHighVis: Boolean(product.isHighVis),
+      isWorkwear: Boolean(product.isWorkwear),
+      isOutlet: Boolean(product.isOutlet),
+      oekoTexCertified: Boolean(product.oekoTexCertified),
+    });
+    setIsNewProductModalOpen(true);
+  };
+
+  const setColorField = (index: number, field: keyof ColorSwatch, value: string) => {
+    setFormColors((colors) => {
+      const previousName = colors[index]?.name;
+      const updated = colors.map((color, colorIndex) => colorIndex === index ? { ...color, [field]: value } : color);
+      if (field === 'name' && previousName && previousName !== value) {
+        setFormStockMatrix((matrix) => {
+          const next = { ...matrix, [value]: matrix[previousName] || {} };
+          delete next[previousName];
+          return next;
+        });
+      }
+      return updated;
+    });
+  };
+
+  const setVariantStock = (colorName: string, size: string, stock: number) => {
+    setFormStockMatrix((matrix) => ({
+      ...matrix,
+      [colorName]: { ...matrix[colorName], [size]: Math.max(0, stock || 0) },
+    }));
   };
 
   const handleSaveProduct = () => {
@@ -112,27 +204,45 @@ export const AdminPortal: React.FC = () => {
       return;
     }
 
-    const catObj = CATEGORIES.find(c => c.name === formCategory) || CATEGORIES[0];
-    const initialStockMatrix: Record<string, Record<string, number>> = {};
-    formColors.forEach(c => {
-      initialStockMatrix[c.name] = { S: 500, M: 1000, L: 1000, XL: 800, '2XL': 400 };
-    });
+    const cleanModelCode = formModelCode.trim().toUpperCase();
+    if (products.some((product) => product.modelCode.toUpperCase() === cleanModelCode && product.id !== editingProduct?.id)) {
+      showToast(`Model code ${cleanModelCode} is already in use`, 'warning');
+      return;
+    }
+    if (formColors.length === 0 || formSizes.length === 0) {
+      showToast('Add at least one colour and one size', 'warning');
+      return;
+    }
+
+    const catObj = catalogCategories.find(c => c.name === formCategory) || catalogCategories[0];
+    if (!catObj) {
+      showToast('Create at least one category before saving a product', 'error');
+      return;
+    }
+    const stockMatrix = Object.fromEntries(formColors.map((color) => [
+      color.name,
+      Object.fromEntries(formSizes.map((size) => [size, formStockMatrix[color.name]?.[size] || 0])),
+    ]));
+    const variantSkus = Object.fromEntries(formColors.map((color) => [
+      color.name,
+      Object.fromEntries(formSizes.map((size) => [size, variantSku(cleanModelCode, size)])),
+    ]));
 
     const selectedVendor = vendors.find(v => v.id === formVendorId);
 
     const newProd: Product = {
-      id: editingProduct ? editingProduct.id : formModelCode,
-      modelCode: formModelCode,
+      id: editingProduct ? editingProduct.id : cleanModelCode,
+      modelCode: cleanModelCode,
       name: formName,
       subtitle: formSubtitle,
       category: formCategory,
       categorySlug: catObj.slug,
       description: formDescription || `${formName} - ${formSubtitle}. Certified for commercial printing and wholesale distribution.`,
-      features: editingProduct?.features || ['High durability', 'Oeko-Tex Standard 100', 'Reinforced seams', 'Removable label'],
+      features: formFeatures.split('\n').map((feature) => feature.trim()).filter(Boolean),
       composition: formComposition,
       weightGsm: formGsm,
       gender: formGender,
-      sizes: editingProduct?.sizes || ['S', 'M', 'L', 'XL', '2XL'],
+      sizes: formSizes,
       colors: formColors,
       images: formImages,
       priceUnit: formPriceUnit,
@@ -140,8 +250,9 @@ export const AdminPortal: React.FC = () => {
       priceBox: formPriceBox,
       packQuantity: formPackQty,
       boxQuantity: formBoxQty,
-      stockMatrix: editingProduct?.stockMatrix || initialStockMatrix,
-      oekoTexCertified: true,
+      stockMatrix,
+      variantSkus,
+      ...formFlags,
       cartonDimensions: '54 x 36 x 34 cm (16 kg)',
       vendorId: formVendorId || undefined,
       vendorName: selectedVendor?.name || undefined,
@@ -149,10 +260,10 @@ export const AdminPortal: React.FC = () => {
 
     if (editingProduct) {
       setProducts(prev => prev.map(p => p.id === editingProduct.id ? newProd : p));
-      showToast(`Product ${formModelCode} updated successfully!`, 'success');
+      showToast(`Product ${cleanModelCode} updated successfully!`, 'success');
     } else {
       setProducts(prev => [newProd, ...prev]);
-      showToast(`Product ${formModelCode} added to catalog!`, 'success');
+      showToast(`Product ${cleanModelCode} added to catalog!`, 'success');
     }
 
     setIsNewProductModalOpen(false);
@@ -172,14 +283,7 @@ export const AdminPortal: React.FC = () => {
 
   const handleSaveMySQL = async () => {
     setIsTestingDb(true);
-    await testMySQLConnection({
-      host: dbHost,
-      port: Number(dbPort),
-      database: dbName,
-      user: dbUser,
-      password: dbPassword,
-      ssl: dbSsl,
-    });
+    await testMySQLConnection({ database: dbName });
     setIsTestingDb(false);
   };
 
@@ -198,7 +302,11 @@ CREATE TABLE IF NOT EXISTS \`categories\` (
   \`id\` VARCHAR(64) PRIMARY KEY,
   \`name\` VARCHAR(255) NOT NULL,
   \`slug\` VARCHAR(128) NOT NULL UNIQUE,
-  \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  \`parent_id\` VARCHAR(64) NULL,
+  \`visible\` BOOLEAN DEFAULT TRUE,
+  \`sort_order\` INT DEFAULT 0,
+  \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (\`parent_id\`) REFERENCES \`categories\`(\`id\`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Table 2: Products & Technical Specs
@@ -208,6 +316,7 @@ CREATE TABLE IF NOT EXISTS \`products\` (
   \`name\` VARCHAR(255) NOT NULL,
   \`subtitle\` VARCHAR(255),
   \`category_id\` VARCHAR(64),
+  \`subcategory_id\` VARCHAR(64),
   \`composition\` TEXT,
   \`weight_gsm\` INT DEFAULT 150,
   \`gender\` ENUM('Unisex', 'Men', 'Women', 'Kids') DEFAULT 'Unisex',
@@ -241,9 +350,12 @@ CREATE TABLE IF NOT EXISTS \`inventory_stock\` (
   \`product_id\` VARCHAR(64) NOT NULL,
   \`color_code\` VARCHAR(20) NOT NULL,
   \`size\` VARCHAR(20) NOT NULL,
+  \`variant_sku\` VARCHAR(64) NOT NULL,
   \`stock_count\` INT DEFAULT 0,
+  \`reserved_count\` INT DEFAULT 0,
   \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY \`unique_stock_item\` (\`product_id\`, \`color_code\`, \`size\`)
+  UNIQUE KEY \`unique_stock_item\` (\`product_id\`, \`color_code\`, \`size\`),
+  INDEX \`idx_variant_sku\` (\`variant_sku\`)
 ) ENGINE=InnoDB;
 
 -- Table 5: Orders & B2B Invoices Ledger
@@ -256,8 +368,11 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
   \`client_reference\` VARCHAR(128),
   \`client_vat\` VARCHAR(32) NOT NULL,
   \`status\` ENUM('Pending', 'Processing', 'Dispatched', 'Delivered', 'Invoiced', 'Cancelled') DEFAULT 'Processing',
-  \`payment_status\` ENUM('Paid', 'Pending 30 Days', 'Expired') DEFAULT 'Pending 30 Days',
+  \`payment_status\` ENUM('Paid', 'Pending 30 Days', 'Pending Payment', 'Expired', 'Refunded') DEFAULT 'Pending Payment',
+  \`payment_method_id\` VARCHAR(64),
   \`subtotal\` DECIMAL(12,2) NOT NULL,
+  \`shipping_cost\` DECIMAL(12,2) DEFAULT 0,
+  \`payment_fee\` DECIMAL(12,2) DEFAULT 0,
   \`tax_amount\` DECIMAL(12,2) NOT NULL,
   \`total_amount\` DECIMAL(12,2) NOT NULL,
   \`total_pieces\` INT NOT NULL,
@@ -266,6 +381,45 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
   \`carrier\` VARCHAR(128),
   \`tracking_number\` VARCHAR(128),
   \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Table 6: Administratively configured payment and shipping methods
+CREATE TABLE IF NOT EXISTS \`commerce_methods\` (
+  \`id\` VARCHAR(64) PRIMARY KEY,
+  \`method_type\` ENUM('payment', 'shipping') NOT NULL,
+  \`name\` VARCHAR(255) NOT NULL,
+  \`provider\` VARCHAR(255),
+  \`enabled\` BOOLEAN DEFAULT FALSE,
+  \`public_config_json\` JSON,
+  \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Table 7: Application users. Registration must always write role='client'.
+CREATE TABLE IF NOT EXISTS \`users\` (
+  \`id\` VARCHAR(64) PRIMARY KEY,
+  \`name\` VARCHAR(255) NOT NULL,
+  \`email\` VARCHAR(255) NOT NULL UNIQUE,
+  \`company\` VARCHAR(255) NOT NULL,
+  \`password_hash\` VARCHAR(255) NOT NULL,
+  \`role\` ENUM('client', 'vendor', 'logistics_admin', 'super_admin') NOT NULL DEFAULT 'client',
+  \`status\` ENUM('active', 'invited', 'suspended') NOT NULL DEFAULT 'active',
+  \`is_bootstrap_owner\` BOOLEAN NOT NULL DEFAULT FALSE,
+  \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  \`last_login_at\` TIMESTAMP NULL,
+  INDEX \`idx_user_role_status\` (\`role\`, \`status\`)
+) ENGINE=InnoDB;
+
+-- Seed exactly one protected owner in a server-side migration using deployment
+-- environment values and a strong Argon2id/bcrypt hash. Never put its password here.
+
+CREATE TABLE IF NOT EXISTS \`role_change_audit\` (
+  \`id\` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  \`actor_user_id\` VARCHAR(64) NOT NULL,
+  \`target_user_id\` VARCHAR(64) NOT NULL,
+  \`old_role\` VARCHAR(32) NOT NULL,
+  \`new_role\` VARCHAR(32) NOT NULL,
+  \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX \`idx_role_audit_target\` (\`target_user_id\`, \`created_at\`)
 ) ENGINE=InnoDB;
 
 -- Completed schema export. Ready for MySQL execution.
@@ -286,6 +440,10 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
     showToast('Optimized 12 garment images to WebP (-74% storage footprint)!', 'success');
   };
 
+  if (currentUser.role !== 'super_admin' || currentUser.status !== 'active') {
+    return <div className="mx-auto my-20 max-w-xl rounded-xl border border-red-200 bg-red-50 p-8 text-center"><ShieldCheck className="mx-auto h-8 w-8 text-red-600" /><h1 className="mt-3 text-xl font-black">Super Admin access required</h1><p className="mt-2 text-sm text-red-800">Your account does not have permission to open this management area.</p></div>;
+  }
+
   return (
     <div className="w-full bg-[#f8f8f8] min-h-screen pb-20 font-sans">
       {/* Admin Top Header */}
@@ -301,24 +459,11 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
             </span>
           </div>
 
-          {/* Right Controls: Role Switcher & MySQL Indicator */}
+          {/* Right Controls: signed-in owner & MySQL indicator */}
           <div className="flex flex-wrap items-center gap-3 text-xs">
-            {/* User Role Switcher */}
             <div className="flex items-center space-x-2 bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-md">
-              <span className="text-neutral-400 font-semibold">Active Role:</span>
-              <select
-                value={userRole}
-                onChange={(e) => {
-                  setUserRole(e.target.value as any);
-                  showToast(`Role switched to ${e.target.value}`, 'info');
-                }}
-                className="bg-black text-yellow-400 font-bold border border-neutral-700 rounded px-2 py-0.5 outline-none cursor-pointer"
-              >
-                <option value="super_admin">👑 Super Administrator (Full Control)</option>
-                <option value="vendor">🏭 Vendor / Factory Manager</option>
-                <option value="logistics_admin">🚚 Logistics & Dispatch Hub</option>
-                <option value="client">👤 B2B Client Customer</option>
-              </select>
+              <span className="text-neutral-400 font-semibold">Signed in:</span>
+              <strong className="text-yellow-400">{currentUser.name} · {currentUser.role.replace('_', ' ')}</strong>
             </div>
 
             {/* MySQL Live Indicator */}
@@ -364,6 +509,26 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
               </button>
 
               <button
+                onClick={() => setAdminTab('site_content')}
+                className={`w-full text-left px-4 py-3 flex items-center space-x-2.5 transition-colors border-b border-gray-100 ${
+                  adminTab === 'site_content' ? 'bg-black text-white font-bold' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <ImageIcon className="w-4 h-4 text-purple-500" />
+                <span>Pages, Menus & Media</span>
+              </button>
+
+              <button
+                onClick={() => setAdminTab('users_roles')}
+                className={`w-full text-left px-4 py-3 flex items-center space-x-2.5 transition-colors border-b border-gray-100 ${
+                  adminTab === 'users_roles' ? 'bg-black text-white font-bold' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4 text-amber-500" />
+                <span>Users & Roles</span>
+              </button>
+
+              <button
                 onClick={() => setAdminTab('vendors')}
                 className={`w-full text-left px-4 py-3 flex items-center space-x-2.5 transition-colors border-b border-gray-100 ${
                   adminTab === 'vendors' ? 'bg-black text-white font-bold' : 'text-gray-700 hover:bg-gray-50'
@@ -384,6 +549,16 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
               </button>
 
               <button
+                onClick={() => setAdminTab('inventory')}
+                className={`w-full text-left px-4 py-3 flex items-center space-x-2.5 transition-colors border-b border-gray-100 ${
+                  adminTab === 'inventory' ? 'bg-black text-white font-bold' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Warehouse className="w-4 h-4 text-emerald-500" />
+                <span>Stock & Variant SKUs</span>
+              </button>
+
+              <button
                 onClick={() => setAdminTab('orders')}
                 className={`w-full text-left px-4 py-3 flex items-center space-x-2.5 transition-colors border-b border-gray-100 ${
                   adminTab === 'orders' ? 'bg-black text-white font-bold' : 'text-gray-700 hover:bg-gray-50'
@@ -401,6 +576,16 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
               >
                 <FileText className="w-4 h-4" />
                 <span>Invoicing & Tax Engine</span>
+              </button>
+
+              <button
+                onClick={() => setAdminTab('commerce_settings')}
+                className={`w-full text-left px-4 py-3 flex items-center space-x-2.5 transition-colors border-b border-gray-100 ${
+                  adminTab === 'commerce_settings' ? 'bg-black text-white font-bold' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <CreditCard className="w-4 h-4 text-sky-500" />
+                <span>Payments & Delivery</span>
               </button>
 
               <button
@@ -433,9 +618,21 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
               <BrandingSettingsTab />
             )}
 
+            {adminTab === 'site_content' && (
+              <SiteContentTab />
+            )}
+
+            {adminTab === 'users_roles' && (
+              <UserRolesTab />
+            )}
+
             {/* TAB: VENDORS */}
             {adminTab === 'vendors' && (
               <VendorsTab />
+            )}
+
+            {adminTab === 'commerce_settings' && (
+              <CommerceSettingsTab />
             )}
             
             {/* TAB 1: DASHBOARD */}
@@ -576,26 +773,7 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                           </td>
                           <td className="py-3 px-3 text-right space-x-2">
                             <button
-                              onClick={() => {
-                                setEditingProduct(p);
-                                setFormModelCode(p.modelCode);
-                                setFormName(p.name);
-                                setFormSubtitle(p.subtitle || '');
-                                setFormDescription(p.description || '');
-                                setFormVendorId(p.vendorId || '');
-                                setFormCategory(p.category);
-                                setFormGsm(p.weightGsm);
-                                setFormComposition(p.composition);
-                                setFormGender(p.gender);
-                                setFormPriceUnit(p.priceUnit);
-                                setFormPricePack(p.pricePack);
-                                setFormPriceBox(p.priceBox);
-                                setFormPackQty(p.packQuantity);
-                                setFormBoxQty(p.boxQuantity);
-                                setFormColors(p.colors);
-                                setFormImages(p.images);
-                                setIsNewProductModalOpen(true);
-                              }}
+                              onClick={() => openEditProductModal(p)}
                               className="text-blue-600 hover:underline font-bold"
                             >
                               Edit
@@ -611,6 +789,33 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {adminTab === 'inventory' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Stock entry and generated variant SKUs</h2>
+                  <p className="text-xs text-gray-500">Stock is controlled for every colour and size. XL, XXL/2XL, XXXL/3XL and larger variants automatically receive the <strong>-BIG</strong> SKU suffix.</p>
+                </div>
+                <div className="grid gap-3">
+                  {products.map((product) => {
+                    const variants = product.colors.length * product.sizes.length;
+                    const totalStock = Object.values(product.stockMatrix).reduce((total, sizes) => total + Object.values(sizes).reduce((sum, stock) => sum + stock, 0), 0);
+                    const bigSkus = product.sizes.filter(isBigSize).map((size) => variantSku(product.modelCode, size));
+                    return (
+                      <div key={product.id} className="flex flex-col gap-4 rounded-lg border border-neutral-200 p-4 text-xs sm:flex-row sm:items-center">
+                        <img src={product.images[0]} alt="" className="h-16 w-14 rounded bg-neutral-100 object-cover" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2"><strong className="text-sm">{product.name}</strong><code className="rounded bg-neutral-100 px-2 py-1">{product.modelCode}</code></div>
+                          <p className="mt-1 text-neutral-500">{variants} variants · {totalStock.toLocaleString()} units · {product.colors.length} colours</p>
+                          {bigSkus.length > 0 && <p className="mt-1 text-[10px] text-amber-700">Big-size SKU: <strong className="font-mono">{bigSkus[0]}</strong> ({product.sizes.filter(isBigSize).join(', ')})</p>}
+                        </div>
+                        <button type="button" onClick={() => openEditProductModal(product)} className="rounded-md bg-black px-4 py-2 font-bold text-white">Edit stock & variants</button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -650,6 +855,21 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                             <option value="Invoiced">Invoiced</option>
                             <option value="Cancelled">Cancelled</option>
                           </select>
+                          <select
+                            value={ord.paymentStatus}
+                            onChange={(event) => {
+                              setOrders((current) => current.map((order) => order.id === ord.id ? { ...order, paymentStatus: event.target.value as typeof order.paymentStatus } : order));
+                              showToast(`Payment for ${ord.orderNumber} updated`, 'success');
+                            }}
+                            className="bg-white border border-gray-300 rounded px-2.5 py-1 font-bold text-xs outline-none"
+                            aria-label="Payment status"
+                          >
+                            <option value="Pending Payment">Pending payment</option>
+                            <option value="Pending 30 Days">Pending 30 days</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Refunded">Refunded</option>
+                          </select>
                         </div>
                       </div>
 
@@ -664,6 +884,17 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                             </div>
                           </div>
                         ))}
+                      </div>
+
+                      <div className="grid gap-3 rounded-md border border-gray-200 bg-white p-3 sm:grid-cols-2">
+                        <label className="text-[10px] font-bold uppercase text-gray-500">Carrier
+                          <input value={ord.carrier || ''} onChange={(event) => setOrders((current) => current.map((order) => order.id === ord.id ? { ...order, carrier: event.target.value } : order))} className="mt-1 w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs font-normal text-gray-900" />
+                        </label>
+                        <label className="text-[10px] font-bold uppercase text-gray-500">Tracking number
+                          <input value={ord.trackingNumber || ''} onChange={(event) => setOrders((current) => current.map((order) => order.id === ord.id ? { ...order, trackingNumber: event.target.value } : order))} className="mt-1 w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs font-mono font-normal text-gray-900" />
+                        </label>
+                        <p className="text-[11px] text-gray-600"><strong>Payment:</strong> {ord.paymentMethodName || 'Legacy order'} · {ord.paymentStatus}</p>
+                        <p className="text-[11px] text-gray-600"><strong>Customer notes:</strong> {ord.notes || 'None'}</p>
                       </div>
 
                       {/* Actions */}
@@ -766,39 +997,17 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                 <div>
                   <div className="flex items-center space-x-2">
                     <Database className="w-5 h-5 text-sky-600" />
-                    <h2 className="text-xl font-bold text-gray-900">Manual MySQL Database Configuration & First-Visit Setup</h2>
+                    <h2 className="text-xl font-bold text-gray-900">MySQL Configuration & Schema Export</h2>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Configure your direct MySQL / MariaDB connection parameters for high-volume B2B e-commerce persistence and catalog sync.
+                    On Namecheap, PHP connects to MySQL using server-only <code>api/config.php</code>. This page calls <code>/api/health.php</code>; database credentials never enter the browser.
                   </p>
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4 text-xs">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1.5fr]">
                     <div>
-                      <label className="block font-bold text-gray-700 mb-1">MySQL Database Host / IP:</label>
-                      <input
-                        type="text"
-                        value={dbHost}
-                        onChange={(e) => setDbHost(e.target.value)}
-                        placeholder="e.g. 127.0.0.1 or mysql.production.internal"
-                        className="w-full bg-white border border-gray-300 rounded px-3 py-2 font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-gray-700 mb-1">Port:</label>
-                      <input
-                        type="number"
-                        value={dbPort}
-                        onChange={(e) => setDbPort(Number(e.target.value))}
-                        placeholder="3306"
-                        className="w-full bg-white border border-gray-300 rounded px-3 py-2 font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-gray-700 mb-1">Database Name (Schema):</label>
+                      <label className="block font-bold text-gray-700 mb-1">Schema filename label:</label>
                       <input
                         type="text"
                         value={dbName}
@@ -807,39 +1016,9 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                         className="w-full bg-white border border-gray-300 rounded px-3 py-2 font-mono font-bold"
                       />
                     </div>
-
-                    <div>
-                      <label className="block font-bold text-gray-700 mb-1">Database User:</label>
-                      <input
-                        type="text"
-                        value={dbUser}
-                        onChange={(e) => setDbUser(e.target.value)}
-                        placeholder="roly_admin"
-                        className="w-full bg-white border border-gray-300 rounded px-3 py-2 font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-gray-700 mb-1">Database Password:</label>
-                      <input
-                        type="password"
-                        value={dbPassword}
-                        onChange={(e) => setDbPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="w-full bg-white border border-gray-300 rounded px-3 py-2 font-mono"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2 pt-6">
-                      <label className="flex items-center space-x-2 cursor-pointer font-bold text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={dbSsl}
-                          onChange={(e) => setDbSsl(e.target.checked)}
-                          className="accent-black rounded"
-                        />
-                        <span>Enable SSL / TLS Encryption</span>
-                      </label>
+                    <div className="rounded-lg border border-sky-200 bg-sky-50 p-4 leading-5 text-sky-900">
+                      <strong className="block">Namecheap setup</strong>
+                      Create the cPanel database/user, import <code>database/001_initial_schema.sql</code>, then copy <code>dist/api/config.example.php</code> to <code>public_html/api/config.php</code> and add the credentials there.
                     </div>
                   </div>
 
@@ -855,7 +1034,7 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                         ) : (
                           <>
                             <Server className="w-4 h-4 text-emerald-400" />
-                            <span>Test & Save MySQL Connection</span>
+                            <span>Test Hosted PHP → MySQL</span>
                           </>
                         )}
                       </button>
@@ -870,7 +1049,7 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                     </div>
 
                     <span className="text-[11px] text-gray-500">
-                      Status: <strong className="text-emerald-700">Connected & Verified</strong>
+                      Status: <strong className={mysqlConfig.connected ? 'text-emerald-700' : 'text-amber-700'}>{mysqlConfig.connected ? 'Hosted API connected' : 'Not connected — configure api/config.php'}</strong>
                     </span>
                   </div>
                 </div>
@@ -878,10 +1057,11 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                 {/* Schema Structure Preview */}
                 <div className="bg-neutral-900 text-neutral-300 p-5 rounded-lg text-xs font-mono space-y-2">
                   <div className="flex justify-between items-center text-white border-b border-neutral-800 pb-2">
-                    <span className="font-bold">Active MySQL Database Architecture Tables:</span>
+                    <span className="font-bold">Tables included in the downloadable starter schema:</span>
                     <span className="text-[10px] text-yellow-400">Engine: InnoDB • UTF8MB4</span>
                   </div>
-                  <p>✓ `categories` (9 main categories, sub-category routing slugs)</p>
+                  <p>✓ `categories` (editable parent/submenu hierarchy and visibility)</p>
+                  <p>✓ `users` & `role_change_audit` (client-default registration and protected role administration)</p>
                   <p>✓ `products` (200+ models, composition, GSM weights, certifications)</p>
                   <p>✓ `product_variations` (Color swatches, optimized WebP images)</p>
                   <p>✓ `inventory_stock` (Stock breakdown by Alicante automated hub)</p>
@@ -948,11 +1128,23 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
 
       {/* New / Edit Product Modal */}
       {isNewProductModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full my-8 p-6 text-xs space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base font-bold text-gray-900 border-b border-gray-200 pb-3">
-              {editingProduct ? `Edit Model ${editingProduct.modelCode}` : 'Add New Roly Apparel Model'}
-            </h3>
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsNewProductModalOpen(false);
+          }}
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl max-w-6xl w-full my-8 p-6 text-xs space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="sticky -top-6 z-10 flex items-center justify-between border-b border-gray-200 bg-white pb-3 pt-1">
+              <h3 className="text-base font-bold text-gray-900">
+                {editingProduct ? `Edit Model ${editingProduct.modelCode}` : 'Add New Roly Apparel Model'}
+              </h3>
+              <button type="button" onClick={() => setIsNewProductModalOpen(false)} className="rounded-full border border-neutral-200 p-2 text-neutral-500 hover:border-black hover:text-black" aria-label="Close product editor" title="Close">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -1017,7 +1209,7 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                   onChange={(e) => setFormCategory(e.target.value)}
                   className="w-full border border-gray-300 rounded px-2.5 py-1.5 font-semibold"
                 >
-                  {CATEGORIES.map((c) => (
+                  {catalogCategories.map((c) => (
                     <option key={c.id} value={c.name}>{c.name}</option>
                   ))}
                 </select>
@@ -1099,7 +1291,104 @@ CREATE TABLE IF NOT EXISTS \`orders\` (
                   className="w-full border border-gray-300 rounded px-2.5 py-1.5 font-mono"
                 />
               </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Pack Quantity (pcs):</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formPackQty}
+                  onChange={(e) => setFormPackQty(Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded px-2.5 py-1.5 font-mono"
+                />
+              </div>
             </div>
+
+            <section className="rounded-lg border border-gray-200 p-4 space-y-3">
+              <h4 className="font-black text-sm text-gray-900">Features, labels & collections</h4>
+              <textarea rows={4} value={formFeatures} onChange={(event) => setFormFeatures(event.target.value)} placeholder="One product feature per line" className="w-full rounded border border-gray-300 px-3 py-2 text-xs" />
+              <div className="flex flex-wrap gap-4">
+                {([
+                  ['isNew', 'New arrival'], ['isEco', 'Eco'], ['isWorkwear', 'Workwear'], ['isHighVis', 'High visibility'], ['isOutlet', 'Outlet'], ['oekoTexCertified', 'Oeko-Tex certified'],
+                ] as const).map(([key, label]) => <label key={key} className="flex items-center gap-2 font-semibold"><input type="checkbox" checked={formFlags[key]} onChange={(event) => setFormFlags((flags) => ({ ...flags, [key]: event.target.checked }))} className="accent-black" />{label}</label>)}
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 p-4 space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h4 className="font-black text-sm text-gray-900">Sizes & automatic SKU rules</h4>
+                  <p className="text-[11px] text-gray-500">Large sizes automatically use <code className="font-bold text-amber-700">{formModelCode.trim().toUpperCase().replace(/-BIG$/i, '') || 'MODEL'}-BIG</code>.</p>
+                </div>
+                <div className="flex gap-2">
+                  <input value={newSize} onChange={(event) => setNewSize(event.target.value.toUpperCase())} placeholder="Custom size" className="w-28 rounded border border-gray-300 px-2.5 py-1.5 font-mono" />
+                  <button type="button" onClick={() => {
+                    const size = newSize.trim().toUpperCase();
+                    if (size && !formSizes.includes(size)) setFormSizes((sizes) => [...sizes, size]);
+                    setNewSize('');
+                  }} className="rounded bg-black px-3 py-1.5 font-bold text-white">Add</button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {DEFAULT_SIZES.map((size) => (
+                  <button key={size} type="button" onClick={() => setFormSizes((sizes) => sizes.includes(size) ? sizes.filter((item) => item !== size) : [...sizes, size])} className={`rounded-full border px-3 py-1.5 font-bold ${formSizes.includes(size) ? 'border-black bg-black text-white' : 'border-gray-300 bg-white'}`}>
+                    {size}{isBigSize(size) ? ' · BIG' : ''}
+                  </button>
+                ))}
+                {formSizes.filter((size) => !DEFAULT_SIZES.includes(size)).map((size) => <button key={size} type="button" onClick={() => setFormSizes((sizes) => sizes.filter((item) => item !== size))} className="rounded-full border border-black bg-black px-3 py-1.5 font-bold text-white">{size}{isBigSize(size) ? ' · BIG' : ''} ×</button>)}
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div><h4 className="font-black text-sm text-gray-900">Colours & colour-specific images</h4><p className="text-[11px] text-gray-500">Each colour can use its own packshot; the gallery below provides additional product photography.</p></div>
+                <button type="button" onClick={() => {
+                  const number = formColors.length + 1;
+                  const color: ColorSwatch = { name: `${number.toString().padStart(2, '0')} New colour`, code: number.toString().padStart(2, '0'), hex: '#999999', image: '' };
+                  setFormColors((colors) => [...colors, color]);
+                  setFormStockMatrix((matrix) => ({ ...matrix, [color.name]: Object.fromEntries(formSizes.map((size) => [size, 0])) }));
+                }} className="flex items-center gap-1 rounded bg-black px-3 py-2 font-bold text-white"><Plus className="h-3.5 w-3.5" /> Add colour</button>
+              </div>
+              <div className="space-y-2">
+                {formColors.map((color, index) => (
+                  <div key={`${color.code}-${index}`} className="grid gap-2 rounded-md bg-gray-50 p-3 sm:grid-cols-[46px_1fr_90px_90px_2fr_30px] sm:items-center">
+                    <input type="color" value={color.hex} onChange={(event) => setColorField(index, 'hex', event.target.value)} className="h-9 w-11 rounded border border-gray-300 bg-white p-1" aria-label="Colour" />
+                    <input value={color.name} onChange={(event) => setColorField(index, 'name', event.target.value)} placeholder="Colour display name" className="rounded border border-gray-300 px-2.5 py-2 font-semibold" />
+                    <input value={color.code} onChange={(event) => setColorField(index, 'code', event.target.value)} placeholder="Code" className="rounded border border-gray-300 px-2.5 py-2 font-mono" />
+                    <input value={color.hex} onChange={(event) => setColorField(index, 'hex', event.target.value)} placeholder="#000000" className="rounded border border-gray-300 px-2.5 py-2 font-mono" />
+                    <input value={color.image || ''} onChange={(event) => setColorField(index, 'image', event.target.value)} placeholder="Colour image URL" className="rounded border border-gray-300 px-2.5 py-2" />
+                    <button type="button" onClick={() => {
+                      setFormColors((colors) => colors.filter((_, colorIndex) => colorIndex !== index));
+                      setFormStockMatrix((matrix) => { const next = { ...matrix }; delete next[color.name]; return next; });
+                    }} className="text-red-600" aria-label="Remove colour"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 p-4 space-y-3">
+              <h4 className="font-black text-sm text-gray-900">Product image gallery</h4>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {formImages.map((url, index) => (
+                  <div key={`${url}-${index}`} className="flex items-center gap-2 rounded-md bg-gray-50 p-2">
+                    <img src={url} alt="" className="h-12 w-10 rounded bg-white object-cover" />
+                    <input value={url} onChange={(event) => setFormImages((images) => images.map((image, imageIndex) => imageIndex === index ? event.target.value : image))} className="min-w-0 flex-1 rounded border border-gray-300 px-2 py-1.5" />
+                    <button type="button" onClick={() => setFormImages((images) => images.filter((_, imageIndex) => imageIndex !== index))} className="text-red-600"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2"><input value={newImageUrl} onChange={(event) => setNewImageUrl(event.target.value)} placeholder="Paste an image URL" className="min-w-0 flex-1 rounded border border-gray-300 px-3 py-2" /><button type="button" onClick={() => { if (newImageUrl.trim()) setFormImages((images) => [...images, newImageUrl.trim()]); setNewImageUrl(''); }} className="rounded bg-black px-4 py-2 font-bold text-white">Add image</button></div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 p-4 space-y-3">
+              <div><h4 className="font-black text-sm text-gray-900">Stock entry matrix</h4><p className="text-[11px] text-gray-500">Enter the available quantity for every colour/size variation. The generated SKU is shown below each size.</p></div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] border-collapse text-center">
+                  <thead><tr><th className="border border-gray-200 bg-gray-50 px-3 py-2 text-left">Colour</th>{formSizes.map((size) => <th key={size} className="border border-gray-200 bg-gray-50 px-2 py-2"><span className="block font-black">{size}</span><code className={`text-[9px] ${isBigSize(size) ? 'text-amber-700' : 'text-gray-400'}`}>{variantSku(formModelCode || 'MODEL', size)}</code></th>)}</tr></thead>
+                  <tbody>{formColors.map((color) => <tr key={color.name}><th className="border border-gray-200 px-3 py-2 text-left"><span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded-full border" style={{ backgroundColor: color.hex }} />{color.name}</span></th>{formSizes.map((size) => <td key={size} className="border border-gray-200 p-1.5"><input type="number" min="0" value={formStockMatrix[color.name]?.[size] || 0} onChange={(event) => setVariantStock(color.name, size, Number(event.target.value))} className="w-20 rounded border border-gray-300 px-2 py-1.5 text-center font-mono" /></td>)}</tr>)}</tbody>
+                </table>
+              </div>
+            </section>
 
             <div className="pt-4 border-t border-gray-200 flex justify-end space-x-2">
               <button

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Users, Plus, Star, ShieldCheck, CheckCircle2, XCircle, AlertCircle, DollarSign, Building, Mail, Phone, Globe, ExternalLink } from 'lucide-react';
 import { Vendor } from '../../types';
@@ -14,6 +14,15 @@ export const VendorsTab: React.FC = () => {
   const [country, setCountry] = useState('Spain');
   const [commissionRate, setCommissionRate] = useState(8.0);
   const [rating, setRating] = useState(4.8);
+
+  useEffect(() => {
+    if (!isAddModalOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsAddModalOpen(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [isAddModalOpen]);
 
   const handleCreateVendor = (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,7 +191,7 @@ export const VendorsTab: React.FC = () => {
 
       {/* Add Vendor Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsAddModalOpen(false); }}>
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-neutral-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
               <h3 className="font-black text-sm uppercase tracking-wider text-neutral-900">
@@ -191,6 +200,8 @@ export const VendorsTab: React.FC = () => {
               <button
                 onClick={() => setIsAddModalOpen(false)}
                 className="text-neutral-400 hover:text-black p-1"
+                aria-label="Close vendor modal"
+                title="Close"
               >
                 ✕
               </button>

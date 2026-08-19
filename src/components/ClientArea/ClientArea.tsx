@@ -25,7 +25,6 @@ import {
   Trash2,
   Edit2
 } from 'lucide-react';
-import { InvoicePackingModal } from './InvoicePackingModal';
 
 export const ClientArea: React.FC = () => {
   const {
@@ -1013,8 +1012,6 @@ export const ClientArea: React.FC = () => {
         </div>
       </div>
 
-      {/* Invoice & Packing List Modal */}
-      <InvoicePackingModal />
     </div>
   );
 };

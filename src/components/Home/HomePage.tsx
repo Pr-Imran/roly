@@ -1,615 +1,336 @@
-import React, { useState, useEffect } from 'react';
-import { useStore } from '../../context/StoreContext';
-import { CATEGORIES } from '../../data/mockProducts';
-import { ProductCard } from '../Product/ProductCard';
-import { 
-  Search, 
-  Sparkles, 
-  ArrowRight, 
-  ShieldCheck, 
-  Truck, 
-  Layers, 
-  Package, 
-  Leaf, 
-  Flame, 
-  CheckCircle2, 
-  ChevronRight,
-  ChevronLeft,
-  Download,
-  BookOpen,
-  FileText,
-  Clock,
-  Shield,
-  TrendingUp,
-  Tag,
-  Factory,
-  Globe,
-  Award
-} from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ActivePage, useStore } from '../../context/StoreContext';
+import { HomeContentCard, HomeVideoSlide, Product } from '../../types';
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1600&q=85';
 
 export const HomePage: React.FC = () => {
-  const { products, navigateToCategory, navigateToProduct, setActivePage, showToast, siteSettings } = useStore();
-  const [heroSearch, setHeroSearch] = useState('');
-  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
-  const [activeTab, setActiveTab] = useState<'all' | 't_shirts' | 'polos' | 'sweaters' | 'jackets' | 'workwear'>('all');
+  const {
+    siteSettings,
+    products,
+    setActivePage,
+    navigateToCategory,
+    navigateToProduct,
+    showToast,
+  } = useStore();
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [brandVideoIndex, setBrandVideoIndex] = useState(0);
+  const [search, setSearch] = useState('');
 
-  // Hero carousel slides
-  const heroSlides = [
-    {
-      id: 'general_2026',
-      badge: 'Official 2026 Collection',
-      title: 'THE TEXTILE STANDARD FOR PROMOTIONAL & CORPORATE WEAR',
-      subtitle: 'Over 200 European models with 35,000,000+ units in permanent automated inventory at our Alicante central logistics hub.',
-      modelCode: 'CA6681',
-      modelName: 'ATOMIC 150 T-SHIRT',
-      modelDetails: '100% Combed Cotton • 24 Standard Colors • 150 g/m²',
-      priceFrom: '1.62 €',
-      categorySlug: 't_shirts',
-      bgImage: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1400&q=80',
-      accentColor: 'text-yellow-400',
-      buttonText: 'Explore 2026 Collection',
-    },
-    {
-      id: 'roly_wrk',
-      badge: 'Certified Safety & Industrial',
-      title: 'ROLY WRK HIGH-VISIBILITY & TECHNICAL WORKWEAR',
-      subtitle: 'EN ISO 20471 certified Class 2 & 3 high-visibility, flame retardant, and multi-hazard protective apparel engineered for European industry.',
-      modelCode: 'HV9300',
-      modelName: 'POLARIS HIGH-VIS POLO',
-      modelDetails: 'Coolpass Microfiber • 3M Scotchlite Retroreflective Tape',
-      priceFrom: '8.40 €',
-      categorySlug: 'workwear',
-      bgImage: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1400&q=80',
-      accentColor: 'text-yellow-400',
-      buttonText: 'Explore Roly WRK',
-    },
-    {
-      id: 'roly_eco',
-      badge: '100% GOTS Organic & Recycled',
-      title: 'ROLY ECO: SUSTAINABLE APPAREL FOR A CIRCULAR FUTURE',
-      subtitle: 'Manufactured with 100% certified organic ring-spun cotton and recycled PET polyester fibers under strict Oeko-Tex Standard 100 protocols.',
-      modelCode: 'CA6681',
-      modelName: 'ATOMIC ECO ORGANIC',
-      modelDetails: 'GOTS Certified • 100% Pesticide-Free Cotton • Removable Label',
-      priceFrom: '2.10 €',
-      categorySlug: 'rolyeco',
-      bgImage: 'https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=1400&q=80',
-      accentColor: 'text-emerald-400',
-      buttonText: 'Explore Eco Line',
-    },
-    {
-      id: 'roly_sport',
-      badge: 'High Performance Teamwear',
-      title: 'ROLY SPORT TECHNICAL RUNNING & MULTI-SPORT KITS',
-      subtitle: 'Engineered breathable fabrics with Control-Dry technology for sublimation, football teams, marathon racing, and fitness clubs.',
-      modelCode: 'CA6654',
-      modelName: 'MONTECARLO TECHNICAL TEE',
-      modelDetails: '100% Breathable Pique Polyester • Easy Sublimation • 140 g/m²',
-      priceFrom: '1.95 €',
-      categorySlug: 'sports',
-      bgImage: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1400&q=80',
-      accentColor: 'text-blue-400',
-      buttonText: 'Explore Roly Sport',
-    }
-  ];
+  const heroSlides = siteSettings.heroSlides.length > 0 ? siteSettings.heroSlides : [];
+  const currentHero = heroSlides[heroIndex % Math.max(heroSlides.length, 1)];
+  const featuredProducts = useMemo(() => {
+    const configured = siteSettings.featuredRolyProductCodes.map((code) => products.find((product) => product.modelCode === code)).filter((product): product is Product => Boolean(product));
+    return configured.length > 0 ? configured : [...products.filter((product) => product.isNew), ...products].filter((product, index, all) => all.findIndex((item) => item.id === product.id) === index);
+  }, [products, siteSettings.featuredRolyProductCodes]);
+  const featuredWorkwearProducts = useMemo(() => {
+    const configured = siteSettings.featuredWorkwearProductCodes.map((code) => products.find((product) => product.modelCode === code)).filter((product): product is Product => Boolean(product));
+    return configured.length > 0 ? configured : products.filter((product) => product.isWorkwear || product.categorySlug === 'workwear');
+  }, [products, siteSettings.featuredWorkwearProductCodes]);
+  const footwearProducts = useMemo(() => products.filter((product) => product.categorySlug === 'footwear'), [products]);
 
-  // Auto-advance hero carousel
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 6000);
-    return () => clearInterval(timer);
+    if (heroSlides.length < 2) return undefined;
+    const timer = window.setInterval(() => {
+      setHeroIndex((index) => (index + 1) % heroSlides.length);
+    }, 6500);
+    return () => window.clearInterval(timer);
   }, [heroSlides.length]);
 
-  const handleHeroSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!heroSearch.trim()) return;
-    const match = products.find(
-      p => p.modelCode.toLowerCase() === heroSearch.trim().toLowerCase() ||
-           p.name.toLowerCase().includes(heroSearch.trim().toLowerCase())
+  useEffect(() => {
+    if (siteSettings.brandVideoSlides.length < 2) return undefined;
+    const timer = window.setInterval(() => setBrandVideoIndex((index) => (index + 1) % siteSettings.brandVideoSlides.length), 9000);
+    return () => window.clearInterval(timer);
+  }, [siteSettings.brandVideoSlides.length]);
+
+  const navigate = (target: string) => {
+    const [kind, value] = target.split(':');
+    if (kind === 'category' && value) {
+      navigateToCategory(value);
+      return;
+    }
+    if (kind === 'product' && value) {
+      navigateToProduct(value);
+      return;
+    }
+    if (kind === 'page' && value) {
+      setActivePage(value as ActivePage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const submitSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    const query = search.trim().toLowerCase();
+    if (!query) return;
+    const match = products.find((product) =>
+      product.modelCode.toLowerCase() === query || product.name.toLowerCase().includes(query),
     );
     if (match) {
       navigateToProduct(match.modelCode);
-    } else {
-      navigateToCategory('all');
+      return;
     }
+    showToast(`No product found for “${search.trim()}”`, 'info');
   };
 
-  // Filter products by tab
-  const getTabProducts = () => {
-    switch (activeTab) {
-      case 't_shirts':
-        return products.filter(p => p.categorySlug === 't_shirts' && !p.name.toLowerCase().includes('polo')).slice(0, 8);
-      case 'polos':
-        return products.filter(p => p.name.toLowerCase().includes('polo') || p.modelCode.startsWith('PO')).slice(0, 8);
-      case 'sweaters':
-        return products.filter(p => p.categorySlug === 'swe' || p.modelCode.startsWith('SW') || p.name.toLowerCase().includes('hoodie')).slice(0, 8);
-      case 'jackets':
-        return products.filter(p => p.categorySlug === 'coats' || p.modelCode.startsWith('CH') || p.name.toLowerCase().includes('softshell')).slice(0, 8);
-      case 'workwear':
-        return products.filter(p => p.categorySlug === 'workwear' || p.isWorkwear || p.isHighVis).slice(0, 8);
-      case 'all':
-      default:
-        return products.slice(0, 8);
-    }
-  };
-
-  const currentSlide = heroSlides[currentHeroSlide];
+  const imageStyle = (imageUrl: string) => ({ backgroundImage: `url("${imageUrl || FALLBACK_IMAGE}")` });
 
   return (
-    <div className="w-full bg-[#f8f8f8] min-h-screen font-sans">
-      
-      {/* 1. HERO SLIDER CAROUSEL */}
-      <section className="relative bg-neutral-950 text-white overflow-hidden min-h-[500px] lg:min-h-[580px] flex items-center border-b border-neutral-800">
-        
-        {/* Background Image with smooth fade */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={currentSlide.bgImage}
-            alt={currentSlide.title}
-            className="w-full h-full object-cover opacity-25 filter brightness-75 transition-all duration-1000 transform scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-16 relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          
-          <div className="lg:col-span-7 space-y-6">
-            
-            <div className="inline-flex items-center space-x-2 bg-yellow-400/10 border border-yellow-400/30 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-yellow-400">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{currentSlide.badge}</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
-              {currentSlide.title}
-            </h1>
-
-            <p className="text-sm sm:text-base text-gray-300 max-w-xl leading-relaxed">
-              {currentSlide.subtitle}
-            </p>
-
-            {/* Direct Model Code Quick Search Box */}
-            <form onSubmit={handleHeroSearch} className="max-w-md flex items-center bg-white rounded-xl p-1.5 shadow-2xl">
-              <Search className="w-5 h-5 text-gray-400 ml-3 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search Model Code (e.g. CA6681, PO6638, HV9300)..."
-                value={heroSearch}
-                onChange={(e) => setHeroSearch(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-bold text-gray-900 outline-none placeholder:text-gray-400"
-              />
-              <button
-                type="submit"
-                className="px-5 py-2.5 bg-black hover:bg-neutral-800 text-white text-xs font-black uppercase rounded-lg transition-colors shrink-0 cursor-pointer"
-              >
-                Search
-              </button>
-            </form>
-
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button
-                onClick={() => navigateToCategory(currentSlide.categorySlug)}
-                className="px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black text-xs uppercase tracking-wider rounded-lg shadow-md transition-all cursor-pointer flex items-center space-x-2"
-              >
-                <span>{currentSlide.buttonText}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => setActivePage('catalogs')}
-                className="px-6 py-3 bg-neutral-900/80 hover:bg-neutral-800 text-white font-bold text-xs uppercase rounded-lg border border-neutral-700 transition-all cursor-pointer flex items-center space-x-2"
-              >
-                <BookOpen className="w-4 h-4 text-gray-300" />
-                <span>PDF Catalogues 2026</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Right Hero Feature Card */}
-          <div className="lg:col-span-5 relative hidden sm:block">
-            <div 
-              onClick={() => navigateToProduct(currentSlide.modelCode)}
-              className="group bg-neutral-900/90 backdrop-blur-md rounded-2xl border border-neutral-700 p-5 shadow-2xl cursor-pointer hover:border-yellow-400 transition-all"
-            >
-              <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-neutral-800">
-                <img
-                  src={currentSlide.bgImage}
-                  alt={currentSlide.modelName}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 bg-black text-white text-xs font-mono font-black px-2.5 py-1 rounded">
-                  MODEL {currentSlide.modelCode}
-                </span>
-                <span className="absolute bottom-3 right-3 bg-yellow-400 text-black text-xs font-mono font-black px-2.5 py-1 rounded shadow-md">
-                  From {currentSlide.priceFrom} /pc
-                </span>
-              </div>
-
-              <div className="flex justify-between items-end">
-                <div>
-                  <h3 className="text-lg font-black text-white uppercase group-hover:text-yellow-400 transition-colors">
-                    {currentSlide.modelName}
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">{currentSlide.modelDetails}</p>
-                </div>
-                <span className="text-xs font-bold text-yellow-400 flex items-center gap-1 group-hover:underline">
-                  Order Matrix →
-                </span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Carousel Slider Controls */}
-        <div className="absolute bottom-4 left-0 right-0 z-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 flex justify-between items-center">
-            <div className="flex space-x-2">
-              {heroSlides.map((slide, idx) => (
-                <button
-                  key={slide.id}
-                  onClick={() => setCurrentHeroSlide(idx)}
-                  className={`h-2 rounded-full transition-all cursor-pointer ${
-                    currentHeroSlide === idx ? 'w-8 bg-yellow-400' : 'w-2 bg-neutral-700 hover:bg-neutral-500'
-                  }`}
-                  title={slide.badge}
-                />
-              ))}
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setCurrentHeroSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1))}
-                className="p-2 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-white border border-neutral-700 transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length)}
-                className="p-2 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-white border border-neutral-700 transition-colors cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. GOR FACTORY LOGISTIC ADVANTAGE STRIP */}
-      <section className="bg-white border-b border-gray-200 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            
-            <div className="flex items-start space-x-3.5">
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                <Package className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-black text-xs uppercase text-gray-900">35M+ Units in Stock</h4>
-                <p className="text-[11px] text-gray-500 mt-0.5">Permanent automated inventory at Alicante Hub</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3.5">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <Truck className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-black text-xs uppercase text-gray-900">24/48h EU Express</h4>
-                <p className="text-[11px] text-gray-500 mt-0.5">Automated parcel & pallet dispatch daily</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3.5">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-black text-xs uppercase text-gray-900">In-House Personalization</h4>
-                <p className="text-[11px] text-gray-500 mt-0.5">Screen print, embroidery & DTF transfer</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-black text-xs uppercase text-gray-900">OEKO-TEX® & GOTS</h4>
-                <p className="text-[11px] text-gray-500 mt-0.5">Standard 100 eco-safety certified textiles</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 3. VISUAL CATEGORY BENTO GRID */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-16">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-2">
-          <div>
-            <span className="text-xs font-bold text-red-600 uppercase tracking-widest">Official Collections</span>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">
-              Explore Main Textile Lines
-            </h2>
-          </div>
+    <div className="w-full overflow-hidden bg-white text-[#1d1d1b]">
+      <section className="relative bg-neutral-100">
+        {currentHero ? (
           <button
-            onClick={() => navigateToCategory('all')}
-            className="text-xs font-bold text-black hover:underline flex items-center space-x-1 cursor-pointer"
+            type="button"
+            onClick={() => navigate(currentHero.target)}
+            className="group relative block h-[36vw] min-h-[310px] max-h-[680px] w-full overflow-hidden text-left"
+            aria-label={`${currentHero.title}: ${currentHero.ctaLabel || 'Discover'}`}
           >
-            <span>View All Collections ({products.length} Models)</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {CATEGORIES.map((cat) => (
             <div
-              key={cat.id}
-              onClick={() => navigateToCategory(cat.slug)}
-              className="group bg-white rounded-2xl border border-gray-200 p-5 hover:border-black hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                  Collection
-                </span>
-                <h3 className="font-black text-sm text-gray-900 group-hover:text-red-600 transition-colors uppercase">
-                  {cat.name}
-                </h3>
-                <p className="text-[11px] text-gray-500 line-clamp-2 mt-1 leading-relaxed">
-                  {cat.sub.slice(0, 3).join(', ')}
-                </p>
-              </div>
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-[1600ms] group-hover:scale-[1.015]"
+              style={imageStyle(currentHero.imageUrl)}
+            />
+            {currentHero.showContent !== false && <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/5 to-transparent" />}
+            {currentHero.showContent !== false && <div className={`absolute bottom-[12%] left-[7%] max-w-xl ${currentHero.textColor === 'dark' ? 'text-black' : 'text-white'}`}>
+              <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-xs">
+                {currentHero.eyebrow}
+              </span>
+              <h1 className="max-w-lg text-3xl font-semibold leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
+                {currentHero.title}
+              </h1>
+              <p className="mt-3 text-xs sm:text-base">{currentHero.description}</p>
+              <span className="mt-5 inline-flex rounded-full bg-white px-5 py-2 text-[10px] font-bold text-black transition-transform group-hover:translate-x-1">
+                {currentHero.ctaLabel || 'DISCOVER'}
+              </span>
+            </div>}
+          </button>
+        ) : (
+          <div className="flex min-h-[420px] items-center justify-center">Add a hero slide in Super Admin.</div>
+        )}
 
-              <div className="mt-6 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-700 font-bold group-hover:text-black">
-                <span>Browse Models</span>
-                <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 4. TABBED BEST-SELLERS SHOWCASE WITH PRODUCT CARDS */}
-      <section className="bg-white py-16 border-y border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-            <div>
-              <span className="text-xs font-bold text-red-600 uppercase tracking-widest">High Volume Best-Sellers</span>
-              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight mt-0.5">
-                Top Wholesale References
-              </h2>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex space-x-1.5 overflow-x-auto no-scrollbar bg-neutral-100 p-1.5 rounded-xl text-xs font-bold">
-              {[
-                { id: 'all', label: 'All Top Models' },
-                { id: 't_shirts', label: 'T-Shirts' },
-                { id: 'polos', label: 'Polo Shirts' },
-                { id: 'sweaters', label: 'Sweats & Fleece' },
-                { id: 'jackets', label: 'Softshell & Jackets' },
-                { id: 'workwear', label: 'Roly WRK' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3.5 py-2 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                    activeTab === tab.id
-                      ? 'bg-black text-white shadow-sm'
-                      : 'text-gray-600 hover:text-black hover:bg-gray-200'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {getTabProducts().map((p) => (
-              <ProductCard key={p.id} product={p} />
+        {heroSlides.length > 1 && (
+          <>
+          <button type="button" onClick={() => setHeroIndex((index) => (index - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/85 p-2.5 text-black backdrop-blur transition hover:bg-white" aria-label="Previous slide"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={() => setHeroIndex((index) => (index + 1) % heroSlides.length)} className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/85 p-2.5 text-black backdrop-blur transition hover:bg-white" aria-label="Next slide"><ChevronRight className="h-5 w-5" /></button>
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/80 px-3 py-2 backdrop-blur">
+            {heroSlides.map((slide, index) => (
+              <button
+                key={slide.id}
+                type="button"
+                onClick={() => setHeroIndex(index)}
+                aria-label={`Show slide ${index + 1}`}
+                className={`h-1.5 rounded-full transition-all ${index === heroIndex ? 'w-6 bg-black' : 'w-1.5 bg-black/35'}`}
+              />
             ))}
           </div>
+          </>
+        )}
+      </section>
 
-          <div className="mt-10 text-center">
-            <button
-              onClick={() => navigateToCategory('all')}
-              className="px-8 py-3.5 bg-black hover:bg-neutral-800 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer inline-flex items-center space-x-2"
-            >
-              <span>View Full B2B Wholesale Catalogue</span>
-              <ArrowRight className="w-4 h-4" />
+      <div className="mx-auto max-w-[1600px] px-2 sm:px-3">
+        <form onSubmit={submitSearch} className="mx-auto -mt-px flex max-w-2xl items-center border-x border-b border-neutral-200 bg-white px-4 py-3 md:hidden">
+          <Search className="h-4 w-4 text-neutral-400" />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search products"
+            className="min-w-0 flex-1 px-3 text-sm outline-none"
+          />
+        </form>
+
+        <section className="grid grid-cols-1 gap-1 py-8 sm:grid-cols-3">
+          {siteSettings.audienceCards.map((card) => (
+            <EditorialCard key={card.id} card={card} onClick={() => navigate(card.target)} className="aspect-[1.22/1]" />
+          ))}
+        </section>
+
+        <section className="pb-8">
+          <h2 className="mb-5 text-xl font-medium sm:text-2xl">The latest in Roly</h2>
+          <div className="grid gap-1 md:grid-cols-2">
+            {siteSettings.latestBanners.map((card) => (
+              <EditorialCard key={card.id} card={card} onClick={() => navigate(card.target)} className="aspect-[2/1]" showButton />
+            ))}
+          </div>
+        </section>
+
+        {siteSettings.showCustomizerBanner && (
+          <CampaignBanner card={siteSettings.customizerBanner} onClick={() => navigate(siteSettings.customizerBanner.target)} />
+        )}
+
+        <section className="py-10">
+          <h2 className="mb-5 text-xl font-medium sm:text-2xl">What you can't miss</h2>
+          <div className="grid gap-1 md:grid-cols-3">
+            {siteSettings.storyCards.map((card) => (
+              <button key={card.id} type="button" onClick={() => navigate(card.target)} className="group text-left">
+                <div className="aspect-[1.05/1] overflow-hidden bg-neutral-100">
+                  <img src={card.imageUrl || FALLBACK_IMAGE} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]" />
+                </div>
+                <h3 className="mt-3 text-base font-semibold">{card.title}</h3>
+                <p className="mt-1 max-w-md text-xs leading-relaxed text-neutral-600">{card.description}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <ProductRail title="Featured in Roly" products={featuredProducts} intervalMs={siteSettings.productCarouselIntervalMs} onProduct={navigateToProduct} />
+
+        {siteSettings.brandVideoSlides.length > 0 && (
+          <VideoFeatureCarousel slides={siteSettings.brandVideoSlides} activeIndex={brandVideoIndex} onIndex={setBrandVideoIndex} onNavigate={navigate} />
+        )}
+
+        {footwearProducts.length > 0 && (
+          <section className="mb-12 grid overflow-hidden bg-[#eeeeee] md:grid-cols-[0.8fr_1.2fr]">
+            <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16">
+              <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-500">Footwear collection</span>
+              <h2 className="mt-3 text-4xl font-semibold leading-none sm:text-5xl">Shoes built for every step.</h2>
+              <p className="mt-4 max-w-md text-sm leading-6 text-neutral-600">Explore sports, casual and professional footwear with size-by-size stock availability.</p>
+              <button type="button" onClick={() => navigateToCategory('footwear')} className="mt-6 w-fit rounded-full bg-black px-6 py-3 text-xs font-bold text-white">DISCOVER FOOTWEAR</button>
+            </div>
+            <button type="button" onClick={() => navigateToProduct(footwearProducts[0].modelCode)} className="group relative min-h-[360px] overflow-hidden bg-white">
+              <img src={footwearProducts[0].images[0]} alt={footwearProducts[0].name} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]" />
+              <span className="absolute bottom-5 left-5 rounded-full bg-white px-4 py-2 text-[10px] font-bold text-black">{footwearProducts[0].name} · {footwearProducts[0].modelCode}</span>
             </button>
-          </div>
+          </section>
+        )}
 
+        <LogoMarquee logos={siteSettings.certificationLogos} />
+
+        <section className="relative min-h-[520px] overflow-hidden sm:min-h-[700px]">
+          <div className="absolute left-0 top-7 h-4 w-1/3 bg-[repeating-linear-gradient(135deg,#f5a900_0,#f5a900_8px,transparent_8px,transparent_16px)]" />
+          <button type="button" onClick={() => navigate('category:workwear')} className="relative flex min-h-[520px] w-full items-center justify-center overflow-hidden sm:min-h-[700px]">
+            <video key={siteSettings.workwearVideoUrl} autoPlay muted loop playsInline preload="metadata" poster={siteSettings.workwearVideoPosterUrl} className="absolute inset-0 h-full w-full scale-110 object-cover">
+              <source src={siteSettings.workwearVideoUrl} type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-black/15" />
+            <img src="https://static.gorfactory.es/images/home/Logo_WRK_color.svg" alt="Roly Work" className="relative z-10 w-2/3 max-w-[600px] drop-shadow-[0_4px_30px_rgba(255,255,255,.45)]" />
+          </button>
+          <div className="absolute bottom-7 right-0 h-4 w-1/3 bg-[repeating-linear-gradient(135deg,#f5a900_0,#f5a900_8px,transparent_8px,transparent_16px)]" />
+        </section>
+      </div>
+
+      <section className="bg-black px-6 py-12 text-white sm:px-12">
+        <div className="mx-auto max-w-[1320px]">
+          <p className="mx-auto max-w-4xl text-center text-xs leading-5 text-neutral-300">{siteSettings.workwearBanner.description}</p>
+          <div className="mt-10 grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-4">
+            {['RWK Footwear', 'Hi-Viz', 'Fireproof', 'Industry', 'HORECA', 'Food industry', 'Health & Aesthetics', 'Basics'].map((label) => (
+              <button key={label} type="button" onClick={() => navigate('category:workwear')} className="border-b border-neutral-600 pb-3 text-left text-sm hover:border-white">{label}</button>
+            ))}
+          </div>
+          <button type="button" onClick={() => navigate(siteSettings.workwearBanner.target)} className="mt-10 block w-full overflow-hidden bg-neutral-950">
+            <img src={siteSettings.workwearBanner.imageUrl} alt={siteSettings.workwearBanner.title} className="max-h-[440px] w-full object-cover" />
+          </button>
         </div>
       </section>
 
-      {/* 5. INTERACTIVE CUSTOMIZER STUDIO CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-16">
-        <div className="bg-neutral-950 text-white rounded-3xl p-8 sm:p-14 overflow-hidden relative shadow-2xl border border-neutral-800">
-          
-          <div className="max-w-2xl space-y-5 relative z-10">
-            <div className="inline-flex items-center space-x-2 bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 px-3.5 py-1 rounded-full text-xs font-bold uppercase">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Garment Customization Simulator</span>
-            </div>
-
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight uppercase leading-tight">
-              Screen Printing, Embroidery & DTF Transfer Studio
-            </h2>
-
-            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-              Upload your customer logos, simulate placement on Roly garments (chest, back, sleeves), and calculate automated printing and screen setup rates with instant PDF quotes.
-            </p>
-
-            <div className="pt-2 flex flex-wrap gap-4">
-              <button
-                onClick={() => setActivePage('customizer')}
-                className="px-7 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer flex items-center space-x-2"
-              >
-                <span>Launch Customizer Studio</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => setActivePage('catalogs')}
-                className="px-7 py-3.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase rounded-xl border border-neutral-700 transition-all cursor-pointer flex items-center space-x-2"
-              >
-                <Download className="w-4 h-4 text-gray-400" />
-                <span>Download Lookbooks</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 bg-[radial-gradient(ellipse_at_center,rgba(250,204,21,0.5),transparent_70%)] pointer-events-none hidden lg:block" />
-        </div>
-      </section>
-
-      {/* 6. OFFICIAL PDF CATALOGUES & LOOKBOOKS SECTION */}
-      <section className="bg-white py-16 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          
-          <div className="flex justify-between items-end mb-8">
-            <div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Marketing & Sales Collateral</span>
-              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight mt-0.5">
-                Official Roly 2026 Catalogues
-              </h2>
-            </div>
-            <button
-              onClick={() => setActivePage('catalogs')}
-              className="text-xs font-bold text-black hover:underline flex items-center space-x-1"
-            >
-              <span>View All Lookbooks</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            <div className="bg-neutral-50 rounded-2xl border border-gray-200 p-5 flex flex-col justify-between hover:border-black transition-all">
-              <div>
-                <span className="bg-black text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase">
-                  PDF • 180 Pages
-                </span>
-                <h3 className="font-black text-base text-gray-900 mt-3 uppercase">General Catalogue 2026</h3>
-                <p className="text-xs text-gray-500 mt-1">Complete collection of T-shirts, Polos, Sweats, Jackets, and Accessories.</p>
-              </div>
-              <button
-                onClick={() => showToast('Downloaded General_Catalogue_2026.pdf', 'success')}
-                className="mt-4 w-full py-2.5 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-xs flex items-center justify-center space-x-2 transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </button>
-            </div>
-
-            <div className="bg-neutral-50 rounded-2xl border border-gray-200 p-5 flex flex-col justify-between hover:border-black transition-all">
-              <div>
-                <span className="bg-yellow-500 text-black text-[10px] font-mono font-black px-2 py-0.5 rounded uppercase">
-                  PDF • 95 Pages
-                </span>
-                <h3 className="font-black text-base text-gray-900 mt-3 uppercase">Roly WRK Workwear 2026</h3>
-                <p className="text-xs text-gray-500 mt-1">High-visibility ISO 20471, multi-hazard, and industrial protective garments.</p>
-              </div>
-              <button
-                onClick={() => showToast('Downloaded Roly_WRK_Safety_2026.pdf', 'success')}
-                className="mt-4 w-full py-2.5 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-xs flex items-center justify-center space-x-2 transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </button>
-            </div>
-
-            <div className="bg-neutral-50 rounded-2xl border border-gray-200 p-5 flex flex-col justify-between hover:border-black transition-all">
-              <div>
-                <span className="bg-blue-600 text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase">
-                  PDF • 70 Pages
-                </span>
-                <h3 className="font-black text-base text-gray-900 mt-3 uppercase">Roly Sport & Performance</h3>
-                <p className="text-xs text-gray-500 mt-1">Technical running apparel, team sports kits, and fitness accessories.</p>
-              </div>
-              <button
-                onClick={() => showToast('Downloaded Roly_Sport_Performance_2026.pdf', 'success')}
-                className="mt-4 w-full py-2.5 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-xs flex items-center justify-center space-x-2 transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </button>
-            </div>
-
-            <div className="bg-neutral-50 rounded-2xl border border-gray-200 p-5 flex flex-col justify-between hover:border-black transition-all">
-              <div>
-                <span className="bg-emerald-600 text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase">
-                  PDF • 45 Pages
-                </span>
-                <h3 className="font-black text-base text-gray-900 mt-3 uppercase">Roly Eco Sustainability</h3>
-                <p className="text-xs text-gray-500 mt-1">100% GOTS organic cotton and recycled fibers technical dossier.</p>
-              </div>
-              <button
-                onClick={() => showToast('Downloaded Roly_Eco_Sustainability.pdf', 'success')}
-                className="mt-4 w-full py-2.5 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-xs flex items-center justify-center space-x-2 transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 7. CORPORATE TRUST & CERTIFICATIONS BAR */}
-      <section className="bg-neutral-900 text-white py-12 border-t border-neutral-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="text-center max-w-xl mx-auto mb-8">
-            <span className="text-xs font-bold text-yellow-400 uppercase tracking-widest">Quality & Social Compliance</span>
-            <h3 className="text-xl font-black uppercase mt-1">Certified European Manufacturing Standards</h3>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-6 text-center text-xs">
-            <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col items-center justify-center">
-              <ShieldCheck className="w-8 h-8 text-emerald-400 mb-2" />
-              <span className="font-bold">OEKO-TEX® 100</span>
-              <span className="text-[10px] text-gray-400">Class I/II Certified</span>
-            </div>
-
-            <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col items-center justify-center">
-              <Leaf className="w-8 h-8 text-emerald-400 mb-2" />
-              <span className="font-bold">GOTS Organic</span>
-              <span className="text-[10px] text-gray-400">100% Bio Cotton</span>
-            </div>
-
-            <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col items-center justify-center">
-              <Globe className="w-8 h-8 text-blue-400 mb-2" />
-              <span className="font-bold">BSCI amfori</span>
-              <span className="text-[10px] text-gray-400">Social Audited</span>
-            </div>
-
-            <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col items-center justify-center">
-              <Award className="w-8 h-8 text-yellow-400 mb-2" />
-              <span className="font-bold">ISO 9001:2015</span>
-              <span className="text-[10px] text-gray-400">Quality Management</span>
-            </div>
-
-            <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col items-center justify-center">
-              <Factory className="w-8 h-8 text-yellow-400 mb-2" />
-              <span className="font-bold">ISO 14001:2015</span>
-              <span className="text-[10px] text-gray-400">Environmental</span>
-            </div>
-
-            <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col items-center justify-center">
-              <Shield className="w-8 h-8 text-purple-400 mb-2" />
-              <span className="font-bold">Sedex SMETA</span>
-              <span className="text-[10px] text-gray-400">Ethical Trade</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      <div className="mx-auto max-w-[1600px] px-2 py-12 sm:px-3">
+        <ProductRail title="Featured in Workwear" products={featuredWorkwearProducts} intervalMs={siteSettings.productCarouselIntervalMs} onProduct={navigateToProduct} />
+      </div>
     </div>
   );
 };
+
+const ProductRail: React.FC<{ title: string; products: Product[]; intervalMs: number; onProduct: (modelCode: string) => void }> = ({ title, products, intervalMs, onProduct }) => {
+  const railRef = useRef<HTMLDivElement>(null);
+  const move = (direction: 1 | -1) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 12;
+    const atStart = rail.scrollLeft <= 12;
+    if (direction === 1 && atEnd) rail.scrollTo({ left: 0, behavior: 'smooth' });
+    else if (direction === -1 && atStart) rail.scrollTo({ left: rail.scrollWidth, behavior: 'smooth' });
+    else rail.scrollBy({ left: direction * Math.max(rail.clientWidth * 0.72, 260), behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (products.length < 2 || intervalMs < 1500) return undefined;
+    const timer = window.setInterval(() => move(1), intervalMs);
+    return () => window.clearInterval(timer);
+  }, [products.length, intervalMs]);
+
+  if (products.length === 0) return null;
+  return (
+    <section className="pb-12">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-xl font-medium sm:text-2xl">{title}</h2>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => move(-1)} aria-label={`Previous ${title} products`} className="rounded-full border border-neutral-300 p-2 hover:border-black"><ChevronLeft className="h-4 w-4" /></button>
+          <button type="button" onClick={() => move(1)} aria-label={`Next ${title} products`} className="rounded-full border border-neutral-300 p-2 hover:border-black"><ChevronRight className="h-4 w-4" /></button>
+        </div>
+      </div>
+      <div ref={railRef} className="flex snap-x snap-mandatory gap-1 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {products.map((product) => (
+          <button key={product.id} type="button" onClick={() => onProduct(product.modelCode)} className="group w-[48%] shrink-0 snap-start text-left sm:w-[31.8%] lg:w-[19.7%]">
+            <div className="aspect-[.78/1] overflow-hidden bg-[#f1f1f1]"><img src={product.images[0] || FALLBACK_IMAGE} alt={product.name} loading="lazy" onError={(event) => { event.currentTarget.src = FALLBACK_IMAGE; }} className="h-full w-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-[1.025]" /></div>
+            <div className="flex items-baseline gap-1 pt-3 text-xs"><strong>{product.name}</strong><span className="text-neutral-500">{product.modelCode.replace(/^[A-Z]+/, '') || product.modelCode}</span></div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const VideoFeatureCarousel: React.FC<{ slides: HomeVideoSlide[]; activeIndex: number; onIndex: (index: number) => void; onNavigate: (target: string) => void }> = ({ slides, activeIndex, onIndex, onNavigate }) => {
+  const slide = slides[activeIndex % slides.length];
+  const move = (direction: 1 | -1) => onIndex((activeIndex + direction + slides.length) % slides.length);
+  return (
+    <section className="relative mb-12 min-h-[360px] overflow-hidden bg-black sm:min-h-[620px]">
+      <video key={slide.videoUrl} autoPlay muted loop playsInline preload="metadata" poster={slide.posterUrl} className="absolute inset-0 h-full w-full object-cover"><source src={slide.videoUrl} type="video/mp4" /></video>
+      <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/5 to-black/10" />
+      <button type="button" onClick={() => onNavigate(slide.target)} className={`absolute inset-0 z-10 flex flex-col items-start justify-end p-[7%] text-left ${slide.textColor === 'dark' ? 'text-black' : 'text-white'}`}>
+        <h2 className="max-w-2xl text-4xl font-semibold leading-none sm:text-6xl">{slide.title}</h2>
+        <p className="mt-3 max-w-lg text-sm">{slide.description}</p>
+        <span className="mt-5 rounded-full bg-white px-5 py-2 text-[10px] font-bold text-black">{slide.ctaLabel}</span>
+      </button>
+      {slides.length > 1 && <><button type="button" onClick={() => move(-1)} aria-label="Previous video" className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/85 p-3"><ChevronLeft className="h-5 w-5" /></button><button type="button" onClick={() => move(1)} aria-label="Next video" className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/85 p-3"><ChevronRight className="h-5 w-5" /></button></>}
+    </section>
+  );
+};
+
+const LogoMarquee: React.FC<{ logos: string[] }> = ({ logos }) => (
+  <section className="overflow-hidden border-y border-neutral-100 py-8" aria-label="Certifications and partners">
+    <div className="roly-logo-marquee flex w-max items-center gap-14">
+      {[...logos, ...logos].map((logo, index) => <img key={`${logo}-${index}`} src={logo} alt={`Certification ${(index % Math.max(logos.length, 1)) + 1}`} className="h-12 w-24 shrink-0 object-contain grayscale transition hover:grayscale-0 sm:h-16 sm:w-32" />)}
+    </div>
+  </section>
+);
+
+const EditorialCard: React.FC<{
+  card: HomeContentCard;
+  onClick: () => void;
+  className?: string;
+  showButton?: boolean;
+}> = ({ card, onClick, className = '', showButton = false }) => (
+  <button type="button" onClick={onClick} className={`group relative overflow-hidden bg-neutral-100 text-left ${className}`}>
+    <img src={card.imageUrl || FALLBACK_IMAGE} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]" />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+    <div className="absolute bottom-0 left-0 p-4 text-white sm:p-6">
+      <h3 className="text-lg font-semibold sm:text-2xl">{card.title}</h3>
+      {card.description && <p className="mt-1 max-w-sm text-xs text-white/85">{card.description}</p>}
+      {showButton && (
+        <span className="mt-4 inline-block rounded-full bg-white px-4 py-2 text-[10px] font-bold text-black">
+          {card.ctaLabel || 'DISCOVER'}
+        </span>
+      )}
+    </div>
+  </button>
+);
+
+const CampaignBanner: React.FC<{ card: HomeContentCard; onClick: () => void; contain?: boolean }> = ({ card, onClick, contain = false }) => (
+  <button type="button" onClick={onClick} className="group relative block min-h-[260px] w-full overflow-hidden bg-neutral-100 text-left sm:min-h-[420px]">
+    <img
+      src={card.imageUrl || FALLBACK_IMAGE}
+      alt=""
+      className={`absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-[1.01] ${contain ? 'object-contain' : 'object-cover'}`}
+    />
+    {!contain && <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent" />}
+    {!contain && (
+      <div className="absolute bottom-[13%] left-[7%] max-w-sm text-white">
+        <h2 className="text-3xl font-semibold leading-none sm:text-5xl">{card.title}</h2>
+        <p className="mt-3 text-xs sm:text-sm">{card.description}</p>
+        <span className="mt-5 inline-block rounded-full bg-white px-5 py-2 text-[10px] font-bold text-black">
+          {card.ctaLabel || 'START'}
+        </span>
+      </div>
+    )}
+  </button>
+);

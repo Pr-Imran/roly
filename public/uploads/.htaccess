@@ -1,0 +1,7 @@
+Options -Indexes
+
+# Uploaded files must never be executable PHP.
+<FilesMatch "\.(?:php|phtml|phar|cgi|pl|py|sh)$">
+    Require all denied
+</FilesMatch>
+

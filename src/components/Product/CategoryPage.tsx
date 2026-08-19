@@ -1,11 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { CATEGORIES } from '../../data/mockProducts';
 import { ProductCard } from './ProductCard';
-import { Filter, SlidersHorizontal, ChevronRight, Check } from 'lucide-react';
+import { SlidersHorizontal, ChevronRight } from 'lucide-react';
 
 export const CategoryPage: React.FC = () => {
-  const { selectedCategorySlug, products, setActivePage, setSelectedCategorySlug } = useStore();
+  const { selectedCategorySlug, selectedSubcategorySlug, products, setActivePage, catalogCategories, navigateToCategory } = useStore();
 
   const [selectedGender, setSelectedGender] = useState<string>('all');
   const [selectedGsmRange, setSelectedGsmRange] = useState<string>('all');
@@ -13,15 +12,16 @@ export const CategoryPage: React.FC = () => {
   const [onlyEco, setOnlyEco] = useState<boolean>(false);
   const [onlyHighVis, setOnlyHighVis] = useState<boolean>(false);
 
-  const currentCategory = CATEGORIES.find(c => c.slug === selectedCategorySlug) || CATEGORIES[0];
+  const currentCategory = catalogCategories.find(c => c.slug === selectedCategorySlug) || catalogCategories[0];
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       // Category match
       if (selectedCategorySlug !== 'all' && selectedCategorySlug !== 'limited') {
-        const matchesCategory = p.categorySlug === selectedCategorySlug || currentCategory.sub.includes(p.subCategory || '');
+        const matchesCategory = p.categorySlug === selectedCategorySlug || currentCategory.subcategories.some((subcategory) => subcategory.slug === p.subCategory);
         if (!matchesCategory) return false;
       }
+      if (selectedSubcategorySlug && p.subCategory !== selectedSubcategorySlug) return false;
 
       // Gender filter
       if (selectedGender !== 'all' && p.gender.toLowerCase() !== selectedGender.toLowerCase()) {
@@ -44,7 +44,7 @@ export const CategoryPage: React.FC = () => {
       if (sortBy === 'gsm') return b.weightGsm - a.weightGsm;
       return 0;
     });
-  }, [products, selectedCategorySlug, selectedGender, selectedGsmRange, sortBy, onlyEco, onlyHighVis, currentCategory]);
+  }, [products, selectedCategorySlug, selectedSubcategorySlug, selectedGender, selectedGsmRange, sortBy, onlyEco, onlyHighVis, currentCategory]);
 
   return (
     <div className="w-full bg-[#fbfbfb] min-h-screen pb-20 font-sans">
@@ -106,10 +106,10 @@ export const CategoryPage: React.FC = () => {
               <div>
                 <h4 className="font-bold text-gray-800 uppercase mb-2">Category Navigation</h4>
                 <div className="space-y-1">
-                  {CATEGORIES.map((cat) => (
+                  {catalogCategories.filter((category) => category.visible).map((cat) => (
                     <button
                       key={cat.id}
-                      onClick={() => setSelectedCategorySlug(cat.slug)}
+                      onClick={() => navigateToCategory(cat.slug)}
                       className={`w-full text-left px-2.5 py-1.5 rounded transition-colors flex items-center justify-between ${
                         selectedCategorySlug === cat.slug
                           ? 'bg-black text-white font-bold'
@@ -121,6 +121,18 @@ export const CategoryPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {currentCategory.subcategories.some((subcategory) => subcategory.visible) && (
+                <div className="pt-3 border-t border-gray-100">
+                  <h4 className="font-bold text-gray-800 uppercase mb-2">{currentCategory.name}</h4>
+                  <div className="space-y-1">
+                    <button type="button" onClick={() => navigateToCategory(currentCategory.slug)} className={`w-full rounded px-2.5 py-1.5 text-left ${!selectedSubcategorySlug ? 'bg-neutral-200 font-bold' : 'text-gray-600 hover:bg-gray-100'}`}>All products</button>
+                    {currentCategory.subcategories.filter((subcategory) => subcategory.visible).map((subcategory) => (
+                      <button key={subcategory.id} type="button" onClick={() => navigateToCategory(`${currentCategory.slug}/${subcategory.slug}`)} className={`w-full rounded px-2.5 py-1.5 text-left ${selectedSubcategorySlug === subcategory.slug ? 'bg-black font-bold text-white' : 'text-gray-600 hover:bg-gray-100'}`}>{subcategory.label}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Gender Filter */}
               <div className="pt-3 border-t border-gray-100">

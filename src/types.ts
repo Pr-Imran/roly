@@ -2,6 +2,75 @@ export type Language = 'EN' | 'ES' | 'FR' | 'DE' | 'IT' | 'PT';
 
 export type UserRole = 'super_admin' | 'vendor' | 'client' | 'logistics_admin';
 
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  role: UserRole;
+  status: 'active' | 'invited' | 'suspended';
+  isBootstrapOwner: boolean;
+  createdAt: string;
+  lastLogin?: string;
+}
+
+export interface CatalogSubcategory {
+  id: string;
+  label: string;
+  slug: string;
+  visible: boolean;
+}
+
+export interface CatalogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  visible: boolean;
+  subcategories: CatalogSubcategory[];
+}
+
+export interface SiteLinkItem {
+  id: string;
+  label: string;
+  target: string;
+  visible: boolean;
+  source?: 'category' | 'custom';
+  categoryId?: string;
+  children?: SiteLinkItem[];
+}
+
+export interface HomeContentCard {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  target: string;
+  ctaLabel?: string;
+}
+
+export interface HomeHeroSlide extends HomeContentCard {
+  eyebrow: string;
+  textColor: 'light' | 'dark';
+  showContent?: boolean;
+}
+
+export interface HomeVideoSlide {
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  posterUrl: string;
+  target: string;
+  ctaLabel: string;
+  textColor: 'light' | 'dark';
+}
+
+export interface FooterLinkColumn {
+  id: string;
+  title: string;
+  links: SiteLinkItem[];
+}
+
 export interface SiteSettings {
   brandName: string; // e.g. "ROLY" or custom
   brandTagline: string;
@@ -20,6 +89,61 @@ export interface SiteSettings {
   footerDescription: string;
   primaryColor: string;
   allowMultiVendor: boolean;
+  logoUrl: string;
+  faviconUrl: string;
+  headerNavigation: SiteLinkItem[];
+  heroSlides: HomeHeroSlide[];
+  audienceCards: HomeContentCard[];
+  latestBanners: HomeContentCard[];
+  storyCards: HomeContentCard[];
+  customizerBanner: HomeContentCard;
+  showCustomizerBanner: boolean;
+  workwearBanner: HomeContentCard;
+  brandVideoSlides: HomeVideoSlide[];
+  workwearVideoUrl: string;
+  workwearVideoPosterUrl: string;
+  featuredRolyProductCodes: string[];
+  featuredWorkwearProductCodes: string[];
+  productCarouselIntervalMs: number;
+  certificationLogos: string[];
+  footerColumns: FooterLinkColumn[];
+}
+
+export interface PaymentMethodSetting {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  type: 'gateway' | 'invoice' | 'bank_transfer' | 'cash';
+  provider: string;
+  publicKey?: string;
+  webhookUrl?: string;
+  instructions?: string;
+  feePercent: number;
+  credentialsConfigured: boolean;
+}
+
+export interface ShippingMethodSetting {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  carrier: string;
+  price: number;
+  freeAbove: number;
+  estimatedDays: string;
+}
+
+export interface CommerceSettings {
+  orderPrefix: string;
+  lowStockThreshold: number;
+  stockHoldMinutes: number;
+  allowBackorders: boolean;
+  taxInclusivePricing: boolean;
+  requireTermsAcceptance: boolean;
+  operationsEmail: string;
+  paymentMethods: PaymentMethodSetting[];
+  shippingMethods: ShippingMethodSetting[];
 }
 
 export interface Vendor {
@@ -42,6 +166,7 @@ export interface ColorSwatch {
   code: string; // e.g. "01 White"
   hex: string;
   image?: string;
+  images?: string[];
 }
 
 export interface SizeStock {
@@ -72,6 +197,7 @@ export interface Product {
   boxQuantity: number; // e.g. 50 or 100 pcs per box
   packQuantity: number; // e.g. 5 or 10 pcs per pack
   stockMatrix: Record<string, Record<string, number>>; // colorName -> size -> stockCount
+  variantSkus?: Record<string, Record<string, string>>; // colorName -> size -> generated SKU
   isEco?: boolean;
   isNew?: boolean;
   isHighVis?: boolean;
@@ -128,13 +254,17 @@ export interface Order {
   reference: string; // Client reference e.g. "PROJECT-ALPHA"
   date: string;
   status: 'Pending' | 'Processing' | 'Dispatched' | 'Delivered' | 'Invoiced' | 'Cancelled';
-  paymentStatus: 'Paid' | 'Pending 30 Days' | 'Expired';
+  paymentStatus: 'Paid' | 'Pending 30 Days' | 'Pending Payment' | 'Expired' | 'Refunded';
+  paymentMethodId?: string;
+  paymentMethodName?: string;
+  notes?: string;
   dueDate?: string;
   items: CartItem[];
   subtotal: number;
   taxRate: number; // e.g. 0.21 for 21% VAT
   taxAmount: number;
   shippingCost: number;
+  paymentFee?: number;
   total: number;
   shippingAddress: Address;
   billingAddress: Address;

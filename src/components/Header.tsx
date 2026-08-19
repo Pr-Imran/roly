@@ -1,706 +1,181 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useStore } from '../context/StoreContext';
-import { CATEGORIES } from '../data/mockProducts';
-import { 
-  Search, 
-  Star, 
-  ShoppingBag, 
-  User, 
-  Globe, 
-  ChevronDown, 
-  Check, 
-  HelpCircle, 
-  Shield, 
-  Sparkles, 
-  X,
-  ArrowRight,
-  Package,
-  Layers,
-  Flame,
-  Award
-} from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, Globe2, Menu, Search, ShoppingBag, Star, UserRound, X } from 'lucide-react';
+import { ActivePage, useStore } from '../context/StoreContext';
 import { Language } from '../types';
+
+const LANGUAGES: Language[] = ['EN', 'ES', 'FR', 'DE', 'IT', 'PT'];
 
 export const Header: React.FC = () => {
   const {
-    activePage,
-    setActivePage,
-    clientProfile,
-    displayPrices,
-    setDisplayPrices,
-    language,
-    setLanguage,
+    siteSettings,
+    products,
     searchQuery,
     setSearchQuery,
-    cartTotal,
-    cartItemCount,
-    favorites,
-    setShowSalesRepModal,
-    setShowDbSetupModal,
     navigateToProduct,
     navigateToCategory,
-    products,
-    siteSettings
+    setActivePage,
+    language,
+    setLanguage,
+    displayPrices,
+    setDisplayPrices,
+    favorites,
+    cartItemCount,
+    cartTotal,
+    clientProfile,
+    currentUser,
   } = useStore();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
 
-  const [isLangOpen, setIsLangOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const results = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (query.length < 2) return [];
+    return products.filter((product) =>
+      [product.modelCode, product.name, product.category, product.description]
+        .some((value) => value.toLowerCase().includes(query)),
+    ).slice(0, 6);
+  }, [products, searchQuery]);
 
-  const searchRef = useRef<HTMLDivElement>(null);
-  const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Close search suggestions on click outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchFocused(false);
-      }
+    const closeSearch = (event: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target as Node)) setSearchOpen(false);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', closeSearch);
+    return () => document.removeEventListener('mousedown', closeSearch);
   }, []);
 
-  const handleMouseEnterCategory = (slug: string) => {
-    if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current);
-    setHoveredCategory(slug);
+  const navigate = (target: string) => {
+    const [kind, value] = target.split(':');
+    if (kind === 'category' && value) navigateToCategory(value);
+    if (kind === 'product' && value) navigateToProduct(value);
+    if (kind === 'page' && value) setActivePage(value as ActivePage);
+    setMobileMenuOpen(false);
+    setAccountOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleMouseLeaveNav = () => {
-    menuTimeoutRef.current = setTimeout(() => {
-      setHoveredCategory(null);
-    }, 250);
-  };
-
-  const filteredProducts = searchQuery.trim().length > 1
-    ? products.filter(
-        p =>
-          p.modelCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.description.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 6)
-    : [];
-
-  const languages: { code: Language; label: string; flag: string }[] = [
-    { code: 'EN', label: 'English', flag: '🇬🇧' },
-    { code: 'ES', label: 'Español', flag: '🇪🇸' },
-    { code: 'FR', label: 'Français', flag: '🇫🇷' },
-    { code: 'DE', label: 'Deutsch', flag: '🇩🇪' },
-    { code: 'IT', label: 'Italiano', flag: '🇮🇹' },
-    { code: 'PT', label: 'Português', flag: '🇵🇹' },
-  ];
-
-  // Rich subcategories for Mega Menu
-  const categorySubTree: Record<string, { label: string; items: { name: string; filter?: string; modelCode?: string }[] }[]> = {
-    't_shirts': [
-      {
-        label: 'T-Shirts (Camisetas)',
-        items: [
-          { name: 'Short Sleeve T-Shirts', modelCode: 'CA6681' },
-          { name: 'Long Sleeve T-Shirts', modelCode: 'CA6554' },
-          { name: 'Tank Tops & Sleeveless' },
-          { name: 'Heavy & Organic Cotton', modelCode: 'CA6502' },
-          { name: 'Sublimation Ready T-Shirts' }
-        ]
-      },
-      {
-        label: 'Polo Shirts (Polos)',
-        items: [
-          { name: 'Short Sleeve Pique Polos', modelCode: 'PO6638' },
-          { name: 'Long Sleeve Polos', modelCode: 'PO6609' },
-          { name: 'Technical Sports Polos' },
-          { name: 'Duo Concept Women/Men' }
-        ]
-      },
-      {
-        label: 'Flagship Models',
-        items: [
-          { name: 'Atomic 150 (CA6681)', modelCode: 'CA6681' },
-          { name: 'Beagle 155 (CA6554)', modelCode: 'CA6554' },
-          { name: 'Star Pique (PO6638)', modelCode: 'PO6638' },
-          { name: 'Pegaso Premium (PO6609)', modelCode: 'PO6609' }
-        ]
-      }
-    ],
-    'swe': [
-      {
-        label: 'Sweaters & Hoodies',
-        items: [
-          { name: 'Classic Crewneck Sweaters', modelCode: 'SW1085' },
-          { name: 'Kangaroo Pocket Hoodies', modelCode: 'SW1087' },
-          { name: 'Full-Zip Hooded Sweatshirts' },
-          { name: 'Two-Tone Contrast Hoodies' }
-        ]
-      },
-      {
-        label: 'Fleeces & Softshell',
-        items: [
-          { name: 'Polar Fleeces (Pirineo)' },
-          { name: 'Microfleece Jackets' },
-          { name: '3-Layer Softshell Jackets', modelCode: 'SS5064' },
-          { name: 'Windproof Bonded Vests' }
-        ]
-      },
-      {
-        label: 'Popular Models',
-        items: [
-          { name: 'Caprice Crewneck (SW1085)', modelCode: 'SW1085' },
-          { name: 'Urban Hoodie (SW1087)', modelCode: 'SW1087' },
-          { name: 'Siberia Softshell (SS5064)', modelCode: 'SS5064' }
-        ]
-      }
-    ],
-    'coats': [
-      {
-        label: 'Outerwear & Jackets',
-        items: [
-          { name: 'Padded Winter Parkas', modelCode: 'CH5064' },
-          { name: 'Technical Windbreakers' },
-          { name: 'Waterproof Raincoats' },
-          { name: 'Quilted Bodywarmers & Vests' }
-        ]
-      },
-      {
-        label: 'Protective Outerwear',
-        items: [
-          { name: 'Thermal Insulation Coats' },
-          { name: 'Breathable Membrane Shells' },
-          { name: 'Reversible Puffer Jackets' }
-        ]
-      }
-    ],
-    'sh_pant': [
-      {
-        label: 'Trousers & Shorts',
-        items: [
-          { name: 'Casual Chinos & Cargo Pants', modelCode: 'PA8400' },
-          { name: 'Sports Bermudas & Shorts' },
-          { name: 'Joggers & Tracksuit Bottoms' },
-          { name: 'Compression Sport Leggings' }
-        ]
-      },
-      {
-        label: 'Work Trousers',
-        items: [
-          { name: 'Daily Multi-Pocket Pants', modelCode: 'PA8400' },
-          { name: 'Reinforced Cordura Kneepads' },
-          { name: 'Elastic Stretch Workpants' }
-        ]
-      }
-    ],
-    'sports': [
-      {
-        label: 'Roly Sport Technical',
-        items: [
-          { name: 'Breathable Running Tees', modelCode: 'CA6654' },
-          { name: 'Team Sports Kits (Football/Basketball)' },
-          { name: 'Training Tracksuits' },
-          { name: 'Control-Dry Pique Apparel' }
-        ]
-      },
-      {
-        label: 'Sports Accessories',
-        items: [
-          { name: 'Training Bibs & Markers' },
-          { name: 'Sports Bags & Shoe Bags' },
-          { name: 'Technical Wristbands & Towels' }
-        ]
-      }
-    ],
-    'workwear': [
-      {
-        label: 'High Visibility EN ISO 20471',
-        items: [
-          { name: 'Polaris High-Vis Polo', modelCode: 'HV9300' },
-          { name: 'High-Vis Safety Vests (Sirio)' },
-          { name: 'High-Vis Fleece & Softshell' },
-          { name: 'Class 1, 2 & 3 Certified Apparel' }
-        ]
-      },
-      {
-        label: 'Industry Sectors',
-        items: [
-          { name: 'HORECA & Hospitality Uniforms' },
-          { name: 'Healthcare & Sanitary Scrubs' },
-          { name: 'Food Industry Cleanroom Wear' },
-          { name: 'Flame-Retardant & Antistatic' }
-        ]
-      },
-      {
-        label: 'Top WRK Models',
-        items: [
-          { name: 'Polaris High-Vis (HV9300)', modelCode: 'HV9300' },
-          { name: 'Daily HV Workpants (PA8400)', modelCode: 'PA8400' },
-          { name: 'Almanzor Multi-Pocket Vest' }
-        ]
-      }
-    ],
-    'rolyeco': [
-      {
-        label: 'Roly Eco Sustainable',
-        items: [
-          { name: '100% Organic GOTS Cotton T-Shirts', modelCode: 'CA6681' },
-          { name: 'Recycled PET Polyester Garments' },
-          { name: 'Eco-Friendly Sublimation Series' },
-          { name: 'Oeko-Tex Standard 100 Class I' }
-        ]
-      }
-    ],
-    'other_products': [
-      {
-        label: 'Accessories & Headwear',
-        items: [
-          { name: 'Baseball Caps (5 & 6 Panels)' },
-          { name: 'Winter Beanies & Neck Warmers' },
-          { name: 'Drawstring Bags & Backpacks' },
-          { name: 'Chef & Kitchen Aprons' },
-          { name: 'Microfiber & Cotton Towels' }
-        ]
-      }
-    ],
-    'footwear': [
-      {
-        label: 'Footwear Collection',
-        items: [
-          { name: 'Casual Sneakers & Urban Shoes' },
-          { name: 'Medical & Hospital Clogs' },
-          { name: 'Beach Flip-Flops & Slides' },
-          { name: 'Safety Steel-Toe Work Shoes' }
-        ]
-      }
-    ]
+  const selectResult = (modelCode: string) => {
+    navigateToProduct(modelCode);
+    setSearchQuery('');
+    setSearchOpen(false);
   };
 
   return (
-    <header className="w-full bg-white border-b border-gray-200 sticky top-0 z-40 shadow-xs">
-      
-      {/* Top Black Bar */}
-      <div className="bg-black text-white text-xs px-4 sm:px-8 py-2 flex flex-wrap items-center justify-between">
-        
-        {/* Left: User greeting & Gor Factory identifier */}
-        <div className="flex items-center space-x-3">
-          <span className="font-semibold text-gray-200 tracking-wide">
-            Hi <span className="text-white font-bold">{clientProfile.name}</span>
-          </span>
-          <span className="hidden sm:inline text-gray-500">|</span>
-          <button
-            onClick={() => setActivePage('client_area')}
-            className="hidden sm:inline-flex items-center text-gray-300 hover:text-white transition-colors cursor-pointer"
-          >
-            Client Area
-          </button>
-          <span className="hidden md:inline-block px-2 py-0.5 text-[10px] bg-neutral-800 text-yellow-400 rounded-sm font-medium border border-neutral-700">
-            {clientProfile.discountTier}
-          </span>
-        </div>
-
-        {/* Right side: Stamina badge, Display Prices, Language, Sales Rep, User Account */}
-        <div className="flex items-center space-x-4 sm:space-x-6 text-gray-300">
-          
-          {/* Stamina Power Ideas logo */}
-          <div className="hidden lg:flex items-center space-x-1 font-bold text-gray-400 hover:text-white transition-colors cursor-pointer">
-            <span className="italic tracking-tighter text-sm font-black text-white">Stamina</span>
-            <span className="text-[9px] uppercase tracking-widest text-gray-400 font-medium">Power Ideas</span>
-          </div>
-
-          {/* Display Prices Checkbox */}
-          <label className="flex items-center space-x-1.5 cursor-pointer select-none text-xs hover:text-white">
-            <input
-              type="checkbox"
-              checked={displayPrices}
-              onChange={(e) => setDisplayPrices(e.target.checked)}
-              className="w-3.5 h-3.5 rounded-xs accent-white bg-neutral-800 border-neutral-600 cursor-pointer"
-            />
-            <span className="text-gray-300 flex items-center gap-1">
-              <Check className={`w-3 h-3 ${displayPrices ? 'text-white' : 'text-transparent'}`} />
-              Display Prices
-            </span>
+    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white text-[#1d1d1b]">
+      <div className="hidden border-b border-neutral-100 px-5 py-1.5 text-[10px] text-neutral-500 md:flex md:items-center md:justify-between">
+        <span>{siteSettings.headerNotice}</span>
+        <div className="flex items-center gap-5">
+          <label className="flex cursor-pointer items-center gap-1.5">
+            <input type="checkbox" checked={displayPrices} onChange={(event) => setDisplayPrices(event.target.checked)} className="accent-black" />
+            Display prices
           </label>
-
-          {/* Language Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setIsLangOpen(!isLangOpen)}
-              className="flex items-center space-x-1 text-gray-200 hover:text-white transition-colors cursor-pointer py-1"
-            >
-              <span>{languages.find((l) => l.code === language)?.flag}</span>
-              <span className="font-semibold">{language}</span>
-              <ChevronDown className="w-3 h-3 text-gray-400" />
-            </button>
-
-            {isLangOpen && (
-              <div className="absolute right-0 mt-1 w-32 bg-white text-gray-800 rounded-md shadow-lg border border-gray-100 py-1 z-50">
-                {languages.map((l) => (
-                  <button
-                    key={l.code}
-                    onClick={() => {
-                      setLanguage(l.code);
-                      setIsLangOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-gray-50 transition-colors ${
-                      language === l.code ? 'font-bold text-black bg-gray-50' : 'text-gray-700'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>{l.flag}</span>
-                      <span>{l.label}</span>
-                    </span>
-                    {language === l.code && <Check className="w-3 h-3 text-black" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Sales Representative */}
-          <button
-            onClick={() => setShowSalesRepModal(true)}
-            className="hidden md:flex items-center space-x-1 hover:text-white transition-colors cursor-pointer text-xs"
-          >
-            <HelpCircle className="w-3.5 h-3.5 text-gray-400" />
-            <span>Sales Representative</span>
-          </button>
-
-          {/* Admin & DB Setup quick link */}
-          <button
-            onClick={() => setShowDbSetupModal(true)}
-            className="hidden xl:inline-flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-mono"
-            title="Configure MySQL Database"
-          >
-            <Shield className="w-3 h-3" />
-            MySQL Setup
-          </button>
-
-          {/* User Account Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center space-x-1 text-gray-200 hover:text-white transition-colors cursor-pointer p-1 rounded-full hover:bg-neutral-800"
-            >
-              <User className="w-4 h-4" />
-              <ChevronDown className="w-3 h-3 text-gray-400" />
-            </button>
-
-            {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white text-gray-800 rounded-md shadow-xl border border-gray-100 py-2 z-50 text-xs">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="font-bold text-gray-900">{clientProfile.company}</p>
-                  <p className="text-gray-500 text-[11px]">NIF: {clientProfile.vatNumber}</p>
-                  <p className="text-emerald-600 font-medium text-[11px] mt-0.5">Credit: {clientProfile.availableCredit.toFixed(2)} €</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setActivePage('client_area');
-                    setIsUserMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between"
-                >
-                  <span>Client Area & Invoices</span>
-                  <span className="text-[10px] bg-black text-white px-1.5 py-0.5 rounded-sm font-bold">B2B</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setActivePage('admin');
-                    setIsUserMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between text-indigo-700 font-semibold"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5" />
-                    Admin Control Panel
-                  </span>
-                  <span className="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded-sm">Manager</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDbSetupModal(true);
-                    setIsUserMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700"
-                >
-                  MySQL Database Setup Wizard
-                </button>
-                <div className="border-t border-gray-100 my-1"></div>
-                <button
-                  onClick={() => {
-                    setActivePage('home');
-                    setIsUserMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-50 text-red-600"
-                >
-                  Switch Account / Log out
-                </button>
-              </div>
-            )}
-          </div>
+          <span>{clientProfile.company}</span>
         </div>
       </div>
 
-      {/* Main Bar: Logo, Search, Favourites, Cart */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
-        
-        {/* Brand Logo ROLY */}
-        <div className="flex items-center gap-6">
-          <button
-            onClick={() => setActivePage('home')}
-            className="flex items-baseline text-left group cursor-pointer focus:outline-none"
-          >
-            <span className="text-3xl sm:text-4xl font-black tracking-tighter text-black uppercase font-sans">
-              {siteSettings?.siteName || 'ROLY'}
-            </span>
-            <span className="text-xs font-bold text-red-600 ml-0.5">®</span>
-          </button>
-        </div>
+      <div className="flex h-[70px] items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <button type="button" onClick={() => setMobileMenuOpen((open) => !open)} className="p-1 lg:hidden" aria-label="Toggle menu">
+          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
 
-        {/* Big Search Bar */}
-        <div ref={searchRef} className="relative flex-1 max-w-2xl hidden md:block">
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              placeholder="Search by model (e.g. CA6681, PO6638, HV9300), fabric, or category..."
-              className="w-full bg-[#f4f4f4] border border-transparent focus:border-gray-400 focus:bg-white text-gray-800 text-sm rounded-full pl-5 pr-12 py-2.5 outline-none transition-all placeholder:text-gray-400 font-medium"
-            />
-            <button
-              onClick={() => {
-                if (filteredProducts.length > 0) {
-                  navigateToProduct(filteredProducts[0].modelCode);
-                  setIsSearchFocused(false);
-                }
-              }}
-              className="absolute right-3.5 text-gray-500 hover:text-black transition-colors cursor-pointer"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-10 text-gray-400 hover:text-black cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+        <button type="button" onClick={() => navigate('page:home')} className="shrink-0 text-left" aria-label="Home">
+          {siteSettings.logoUrl ? (
+            <img src={siteSettings.logoUrl} alt={siteSettings.brandName} className="h-7 w-auto max-w-36 object-contain" />
+          ) : (
+            <span className="text-[27px] font-black leading-none tracking-[-0.08em]">{siteSettings.brandName}<sup className="ml-1 text-[8px] tracking-normal">®</sup></span>
+          )}
+        </button>
 
-          {/* Autocomplete Suggestions Dropdown */}
-          {isSearchFocused && searchQuery.trim().length > 1 && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50 divide-y divide-gray-100 max-h-96 overflow-y-auto">
-              {filteredProducts.length > 0 ? (
-                <>
-                  <div className="p-3 bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    Matching Products ({filteredProducts.length})
-                  </div>
-                  {filteredProducts.map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => {
-                        navigateToProduct(product.modelCode);
-                        setIsSearchFocused(false);
-                        setSearchQuery('');
-                      }}
-                      className="w-full p-3.5 text-left hover:bg-gray-50 flex items-center justify-between transition-colors group cursor-pointer"
-                    >
-                      <div className="flex items-center space-x-3.5">
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-12 h-12 object-cover rounded-lg border border-gray-200"
-                        />
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-black text-sm text-black group-hover:text-red-600 transition-colors uppercase">
-                              {product.name}
-                            </span>
-                            <span className="text-xs bg-black text-white px-2 py-0.5 rounded font-mono font-bold">
-                              {product.modelCode}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{product.subtitle}</p>
-                          <span className="text-[11px] text-gray-400">{product.category} • {product.weightGsm} g/m²</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {displayPrices && (
-                          <div className="text-sm font-black text-gray-900 font-mono">
-                            from {product.priceBox.toFixed(2)} €
-                          </div>
-                        )}
-                        <span className="text-[10px] text-emerald-700 bg-emerald-50 font-bold px-1.5 py-0.5 rounded">In Stock</span>
-                      </div>
-                    </button>
-                  ))}
-                </>
-              ) : (
-                <div className="p-6 text-center text-gray-500 text-sm">
-                  No products found for "{searchQuery}". Try "ATOMIC", "POLO", "CA6681" or "WRK".
-                </div>
-              )}
+        <div ref={searchBoxRef} className="relative mx-auto hidden w-full max-w-xl md:block">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            placeholder="Search..."
+            className="h-10 w-full rounded-full border border-neutral-300 bg-neutral-100/70 pl-11 pr-4 text-xs outline-none transition focus:border-neutral-500 focus:bg-white"
+          />
+          {searchOpen && searchQuery.trim().length >= 2 && (
+            <div className="absolute left-0 right-0 top-12 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl">
+              {results.length > 0 ? results.map((product) => (
+                <button key={product.id} type="button" onClick={() => selectResult(product.modelCode)} className="flex w-full items-center gap-3 border-b border-neutral-100 p-3 text-left last:border-0 hover:bg-neutral-50">
+                  <img src={product.images[0]} alt="" className="h-12 w-10 bg-neutral-100 object-cover" />
+                  <span className="min-w-0 flex-1">
+                    <strong className="block truncate text-xs">{product.name}</strong>
+                    <span className="text-[10px] text-neutral-500">{product.modelCode} · {product.category}</span>
+                  </span>
+                </button>
+              )) : <p className="p-5 text-center text-xs text-neutral-500">No matching products</p>}
             </div>
           )}
         </div>
 
-        {/* Right actions: Favourites, Cart, Admin Switcher */}
-        <div className="flex items-center space-x-3 sm:space-x-5">
-          {/* Favourites Star */}
-          <button
-            onClick={() => setActivePage('client_area')}
-            className="flex items-center text-gray-800 hover:text-black p-2 rounded-full hover:bg-gray-100 transition-colors relative cursor-pointer"
-            title="Favourites & Saved Orders"
-          >
-            <Star className="w-5 h-5 fill-black text-black" />
-            {favorites.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-yellow-400 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {favorites.length}
-              </span>
+        <div className="ml-auto flex items-center gap-1 sm:gap-3">
+          <button type="button" onClick={() => setSearchOpen((open) => !open)} className="p-2 md:hidden" aria-label="Search"><Search className="h-5 w-5" /></button>
+          <div className="relative block">
+            <button type="button" onClick={() => setLanguageOpen((open) => !open)} className="flex items-center gap-1 p-1 text-[10px] font-semibold sm:p-2" aria-label="Language">
+              <Globe2 className="hidden h-4 w-4 sm:block" /><span data-no-translate>{language}</span><ChevronDown className="h-3 w-3" />
+            </button>
+            {languageOpen && (
+              <div className="absolute right-0 top-10 grid min-w-24 overflow-hidden rounded-lg border border-neutral-200 bg-white py-1 shadow-xl">
+                {LANGUAGES.map((item) => <button key={item} type="button" data-no-translate onClick={() => { setLanguage(item); setLanguageOpen(false); }} className={`px-4 py-2 text-left text-xs hover:bg-neutral-100 ${item === language ? 'font-bold' : ''}`}>{item}</button>)}
+              </div>
             )}
+          </div>
+          <button type="button" onClick={() => setActivePage('client_area')} className="relative p-2" aria-label="Favourites">
+            <Star className="h-5 w-5" />
+            {favorites.length > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[8px] text-white">{favorites.length}</span>}
           </button>
-
-          {/* Cart Button */}
-          <button
-            onClick={() => setActivePage('cart')}
-            className="flex items-center space-x-2 text-gray-900 hover:text-black p-2 sm:px-3 sm:py-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            {displayPrices && (
-              <span className="font-bold text-sm hidden sm:inline font-mono">
-                {cartTotal.toFixed(2)}€
-              </span>
+          <div className="relative">
+            <button type="button" onClick={() => setAccountOpen((open) => !open)} className="p-2" aria-label="Account"><UserRound className="h-5 w-5" /></button>
+            {accountOpen && (
+              <div className="absolute right-0 top-11 w-56 overflow-hidden rounded-xl border border-neutral-200 bg-white py-2 text-xs shadow-2xl">
+                <div className="border-b border-neutral-100 px-4 py-3"><strong className="block">{currentUser.company}</strong><span className="text-[10px] text-neutral-500">{currentUser.email}</span></div>
+                <button type="button" onClick={() => navigate('page:client_area')} className="w-full px-4 py-2.5 text-left hover:bg-neutral-50">Client area</button>
+                {currentUser.role === 'super_admin' && <button type="button" onClick={() => navigate('page:admin')} className="w-full px-4 py-2.5 text-left font-semibold hover:bg-neutral-50">Super Admin</button>}
+              </div>
             )}
-            <div className="relative">
-              <ShoppingBag className="w-5 h-5 text-black" />
-              <span className="absolute -top-1.5 -right-2 bg-black text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {cartItemCount}
-              </span>
-            </div>
-          </button>
-
-          {/* Admin Switcher Quick Button */}
-          <button
-            onClick={() => setActivePage(activePage === 'admin' ? 'client_area' : 'admin')}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-neutral-300 hover:border-black font-bold text-neutral-800 hover:text-black transition-colors cursor-pointer"
-          >
-            <Shield className="w-3.5 h-3.5 text-neutral-700" />
-            <span>{activePage === 'admin' ? 'Exit Admin' : 'Admin ERP'}</span>
+          </div>
+          <button type="button" onClick={() => setActivePage('cart')} className="relative flex items-center gap-2 p-2" aria-label="Cart">
+            <ShoppingBag className="h-5 w-5" />
+            <span className="hidden text-[10px] lg:block">{displayPrices ? `${cartTotal.toFixed(2)} ${siteSettings.currency}` : 'Cart'}</span>
+            {cartItemCount > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[8px] text-white">{cartItemCount}</span>}
           </button>
         </div>
       </div>
 
-      {/* Main Navigation Bar with Interactive Mega Menus */}
-      <nav 
-        onMouseLeave={handleMouseLeaveNav}
-        className="border-t border-gray-100 bg-white relative"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between overflow-x-auto no-scrollbar text-xs font-bold text-gray-900 tracking-tight">
-          
-          {/* Main 9 Category Buttons */}
-          <div className="flex items-center space-x-1 sm:space-x-4 py-2.5 whitespace-nowrap">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onMouseEnter={() => handleMouseEnterCategory(cat.slug)}
-                onClick={() => {
-                  navigateToCategory(cat.slug);
-                  setHoveredCategory(null);
-                }}
-                className={`px-2.5 py-1 rounded transition-colors cursor-pointer uppercase text-[11px] sm:text-xs font-black tracking-tight ${
-                  hoveredCategory === cat.slug ? 'text-red-600 bg-neutral-50' : 'hover:text-red-600'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+      {searchOpen && (
+        <div className="border-t border-neutral-100 p-3 md:hidden">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search products" className="w-full rounded-full bg-neutral-100 py-2.5 pl-10 pr-4 text-xs outline-none" />
           </div>
-
-          {/* Right side special links */}
-          <div className="flex items-center space-x-4 py-2.5 border-l border-gray-200 pl-4 whitespace-nowrap">
-            <button
-              onClick={() => setActivePage('customizer')}
-              className="flex items-center space-x-1 text-gray-900 hover:text-red-600 font-bold uppercase text-[11px] cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Customizer Studio</span>
-            </button>
-            <button
-              onClick={() => setActivePage('catalogs')}
-              className="hover:text-red-600 font-bold uppercase text-[11px] text-gray-900 cursor-pointer"
-            >
-              Catalogue 2026
-            </button>
-            <button
-              onClick={() => navigateToCategory('limited')}
-              className="text-red-600 hover:text-red-700 font-black uppercase text-[11px] cursor-pointer"
-            >
-              Outlet
-            </button>
-          </div>
+          {searchQuery.trim().length >= 2 && results.map((product) => <button key={product.id} type="button" onClick={() => selectResult(product.modelCode)} className="block w-full border-b border-neutral-100 p-3 text-left text-xs"><strong>{product.name}</strong> <span className="text-neutral-500">{product.modelCode}</span></button>)}
         </div>
+      )}
 
-        {/* MEGA MENU DROPDOWN PANEL */}
-        {hoveredCategory && categorySubTree[hoveredCategory] && (
-          <div 
-            onMouseEnter={() => {
-              if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current);
-            }}
-            onMouseLeave={handleMouseLeaveNav}
-            className="absolute left-0 right-0 top-full bg-white border-b border-gray-200 shadow-2xl z-50 py-6 px-4 sm:px-8 animate-fadeIn"
-          >
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-              
-              {/* Category Columns */}
-              {categorySubTree[hoveredCategory].map((col, idx) => (
-                <div key={idx} className="space-y-3">
-                  <h4 className="font-black text-xs uppercase text-gray-900 tracking-wider pb-1.5 border-b border-gray-100">
-                    {col.label}
-                  </h4>
-                  <ul className="space-y-2 text-xs">
-                    {col.items.map((item, itemIdx) => (
-                      <li key={itemIdx}>
-                        <button
-                          onClick={() => {
-                            if (item.modelCode) {
-                              navigateToProduct(item.modelCode);
-                            } else {
-                              navigateToCategory(hoveredCategory);
-                            }
-                            setHoveredCategory(null);
-                          }}
-                          className="text-gray-600 hover:text-red-600 hover:font-bold transition-all text-left block w-full cursor-pointer"
-                        >
-                          {item.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+      <nav className={`${mobileMenuOpen ? 'block' : 'hidden'} border-t border-neutral-100 lg:block`}>
+        <div className="flex max-h-[70vh] flex-col overflow-y-auto px-4 lg:flex-row lg:items-center lg:justify-center lg:overflow-visible lg:px-6">
+          {siteSettings.headerNavigation.filter((item) => item.visible).map((item) => (
+            <div key={item.id} className="group relative border-b border-neutral-100 lg:border-0">
+              <button type="button" onClick={() => navigate(item.target)} className="flex w-full items-center justify-between gap-1 px-3 py-3 text-left text-[11px] transition-colors hover:bg-neutral-50 lg:py-3.5">
+                {item.label}{item.children?.some((child) => child.visible) && <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />}
+              </button>
+              {item.children?.some((child) => child.visible) && (
+                <div className="grid bg-neutral-50 pb-2 lg:invisible lg:absolute lg:left-1/2 lg:top-full lg:z-50 lg:min-w-64 lg:-translate-x-1/2 lg:rounded-b-lg lg:border lg:border-neutral-200 lg:bg-white lg:py-2 lg:opacity-0 lg:shadow-2xl lg:transition lg:group-hover:visible lg:group-hover:opacity-100 lg:group-focus-within:visible lg:group-focus-within:opacity-100">
+                  {item.children.filter((child) => child.visible).map((child) => (
+                    <button key={child.id} type="button" onClick={() => navigate(child.target)} className="px-6 py-2.5 text-left text-[11px] text-neutral-600 hover:bg-neutral-100 hover:text-black lg:px-4">
+                      {child.label}
+                    </button>
+                  ))}
                 </div>
-              ))}
-
-              {/* Promo Banner Card inside Mega Menu */}
-              <div className="bg-neutral-900 text-white rounded-2xl p-5 flex flex-col justify-between">
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-yellow-400 uppercase">
-                    Central Logistics Hub
-                  </span>
-                  <h4 className="font-black text-sm uppercase mt-1">35,000,000+ Units Ready for Dispatch</h4>
-                  <p className="text-xs text-gray-400 mt-1">Direct B2B wholesale pricing with tiered discounts.</p>
-                </div>
-                <button
-                  onClick={() => {
-                    navigateToCategory(hoveredCategory);
-                    setHoveredCategory(null);
-                  }}
-                  className="mt-4 text-xs font-bold text-yellow-400 hover:text-white flex items-center space-x-1 cursor-pointer"
-                >
-                  <span>View All in Collection</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
+              )}
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </nav>
     </header>
   );

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, CartItem, Order, Proposal, StockNotice, Address, ClientProfile, MySQLConfig, Language, SiteSettings, Vendor, UserRole } from '../types';
-import { MOCK_PRODUCTS } from '../data/mockProducts';
+import { Product, CartItem, Order, Proposal, StockNotice, Address, ClientProfile, MySQLConfig, Language, SiteSettings, Vendor, UserRole, CommerceSettings, AppUser, CatalogCategory } from '../types';
+import { buildCategoryNavigation, CATEGORIES, MOCK_PRODUCTS } from '../data/mockProducts';
 import { MOCK_ORDERS, MOCK_PROPOSALS, MOCK_STOCK_NOTICES, MOCK_ADDRESSES, MOCK_CLIENT_PROFILE } from '../data/mockClientData';
 
 export type ActivePage = 
@@ -54,15 +54,18 @@ export type AdminTab =
   | 'orders'
   | 'invoices'
   | 'inventory'
+  | 'commerce_settings'
   | 'branding_settings'
+  | 'site_content'
+  | 'users_roles'
   | 'vendors'
   | 'db_setup'
   | 'image_optimizer';
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   brandName: 'ROLY',
-  brandTagline: 'European Standard in Promotional & Workwear Textiles',
-  siteTitle: 'ROLY - B2B & B2C Textile Commerce Platform',
+  brandTagline: 'Casual wear, sportswear and work clothing',
+  siteTitle: 'Casual wear, sportswear, work clothing and trainers | Roly',
   companyName: 'GOR FACTORY S.A.',
   taxId: 'ES-A78901234',
   address: 'Ctra. Santomera - Abanilla km 8.8, 30620 Fortuna, Murcia (Spain)',
@@ -70,13 +73,189 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   supportEmail: 'info@gorfactory.com',
   currency: '€',
   vatRate: 21,
-  headerNotice: 'Official Wholesale Distribution Hub • 24/48h European Logistics Dispatch',
-  heroHeadline: 'The European Standard in Promotional & Workwear Textiles',
-  heroSubhead: 'Official 2026 Wholesale & Multi-Vendor Collection',
-  heroDescription: 'Discover over 200 high-performance apparel models with permanent 35M+ unit inventory at our central logistics hub.',
-  footerDescription: 'ROLY is the registered brand of Gor Factory S.A., premier European manufacturer of promotional garments, sports apparel, corporate workwear, and high-visibility uniforms.',
-  primaryColor: '#eab308',
+  headerNotice: 'Hi, welcome to Roly',
+  heroHeadline: 'Attitude. Origin. Inspiration.',
+  heroSubhead: 'Discover our latest collection',
+  heroDescription: 'Casual wear, sportswear, work clothing and trainers designed for every day.',
+  footerDescription: 'Every year we work on the innovation and improvement of our collections, combining design, comfort and durability.',
+  primaryColor: '#f5a900',
   allowMultiVendor: true,
+  logoUrl: '',
+  faviconUrl: '',
+  headerNavigation: [
+    ...buildCategoryNavigation(CATEGORIES),
+    { id: 'nav-customizer', label: 'Customizer/Printing', target: 'page:customizer', visible: true, source: 'custom' },
+    { id: 'nav-catalogue', label: 'Catalogue', target: 'page:catalogs', visible: true, source: 'custom' },
+    { id: 'nav-outlet', label: 'Outlet', target: 'category:outlet', visible: true, source: 'custom' },
+  ],
+  heroSlides: [
+    {
+      id: 'hero-exhibitions',
+      eyebrow: '',
+      title: 'Upcoming Exhibitions 2026',
+      description: '',
+      imageUrl: 'https://static.gorfactory.es/images/home/Ferias_Septiembre_PC.jpg',
+      target: 'page:contact',
+      ctaLabel: '',
+      textColor: 'light',
+      showContent: false,
+    },
+    {
+      id: 'hero-summer-workwear',
+      eyebrow: 'ROLY WORK',
+      title: 'The perfect uniform for the summer season.',
+      description: 'Comfortable workwear designed for warm working days.',
+      imageUrl: 'https://static.gorfactory.es/images/home/VER_ESCRITORIO_VUEL_ALCOLE.jpg',
+      target: 'category:workwear',
+      ctaLabel: 'DISCOVER',
+      textColor: 'light',
+      showContent: true,
+    },
+    {
+      id: 'hero-attitude',
+      eyebrow: 'NEW COLLECTION',
+      title: 'Attitude. Origin. Inspiration.',
+      description: 'Discover our new collection',
+      imageUrl: 'https://static.gorfactory.es/images/home/Banners_novedades_2026.jpg',
+      target: 'category:novelty_roly',
+      ctaLabel: 'NOVELTIES',
+      textColor: 'light',
+      showContent: true,
+    },
+  ],
+  audienceCards: [
+    { id: 'audience-men', title: 'Men', description: '', imageUrl: 'https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg', target: 'category:t_shirts' },
+    { id: 'audience-women', title: 'Women', description: '', imageUrl: 'https://static.gorfactory.es/images/home/Banner_mujer_2026_04.jpg', target: 'category:t_shirts' },
+    { id: 'audience-children', title: 'Children', description: '', imageUrl: 'https://static.gorfactory.es/images/home/Banner_ninos_2026_04.jpg', target: 'category:t_shirts' },
+  ],
+  latestBanners: [
+    { id: 'latest-catalogues', title: 'New catalogues. Unlimited.', description: 'Explore every Roly collection.', imageUrl: 'https://static.gorfactory.es/images/home/Banners_catalogo_2026.jpg', target: 'page:catalogs', ctaLabel: 'DISCOVER' },
+    { id: 'latest-novelties', title: 'Novelties', description: 'Meet the newest silhouettes and colours.', imageUrl: 'https://static.gorfactory.es/images/home/Banners_novedades_2026.jpg', target: 'category:novelty_roly', ctaLabel: 'DISCOVER' },
+  ],
+  storyCards: [
+    { id: 'story-sport', title: 'Sport collection', description: 'T-shirts, technical polo shirts, sports sets, windbreakers, trousers. All you need for training.', imageUrl: 'https://static.gorfactory.es/images/home/Banner_sportcollection_2026_04.jpg', target: 'category:sports' },
+    { id: 'story-jackets', title: 'Jackets', description: 'Clothing for the coldest time of the year. Gilets, softshells, jackets and raincoats.', imageUrl: 'https://static.gorfactory.es/images/home/Banner_abrigos_2026_04.jpg', target: 'category:coats' },
+    { id: 'story-shirts', title: 'T-shirts and polo shirts', description: 'Find your favourite short or long-sleeve polo or t-shirt to wear all year round.', imageUrl: 'https://static.gorfactory.es/images/home/Banner_camisetas_2026_04.jpg', target: 'category:t_shirts' },
+  ],
+  customizerBanner: {
+    id: 'banner-customizer',
+    title: '3D Quote generator',
+    description: 'Create your designs, view them in real time and place your order instantly.',
+    imageUrl: 'https://static.gorfactory.es/images/home/Banner_cotizadorAbril_2026.jpg',
+    target: 'page:customizer',
+    ctaLabel: 'START',
+  },
+  showCustomizerBanner: false,
+  workwearBanner: {
+    id: 'banner-workwear',
+    title: 'ROLY WORK',
+    description: 'Uniforms and workwear built for safe, comfortable performance.',
+    imageUrl: 'https://static.gorfactory.es/images/home/Banner_WRK_Footwear_2026.jpg',
+    target: 'category:workwear',
+    ctaLabel: 'DISCOVER ROLY WORK',
+  },
+  brandVideoSlides: [
+    {
+      id: 'video-roly-2026',
+      title: 'Attitude. Origin. Inspiration.',
+      description: 'Discover the collection in motion.',
+      videoUrl: 'https://static.gorfactory.es/images/home/ROLY_Intro_2026.mp4',
+      posterUrl: 'https://static.gorfactory.es/images/home/Banners_novedades_2026.jpg',
+      target: 'category:novelty_roly',
+      ctaLabel: 'DISCOVER ROLY',
+      textColor: 'light',
+    },
+    {
+      id: 'video-workwear-2026',
+      title: 'Uniforms made to perform.',
+      description: 'Safety, comfort and movement for every working day.',
+      videoUrl: 'https://static.gorfactory.es/images/home/Workwear_Intro_2026_2.mp4',
+      posterUrl: 'https://static.gorfactory.es/images/home/Banner_WRK_Footwear_2026.jpg',
+      target: 'category:workwear',
+      ctaLabel: 'DISCOVER WORKWEAR',
+      textColor: 'light',
+    },
+  ],
+  workwearVideoUrl: 'https://static.gorfactory.es/images/home/Workwear_Intro_2026_2.mp4',
+  workwearVideoPosterUrl: 'https://static.gorfactory.es/images/home/Banner_WRK_Footwear_2026.jpg',
+  featuredRolyProductCodes: ['CA6681', 'PO6638', 'SU1104', 'CQ6439', 'RD6665', 'PE0001'],
+  featuredWorkwearProductCodes: ['HV9300', 'PA9205', 'RD6665', 'BA9092'],
+  productCarouselIntervalMs: 4200,
+  certificationLogos: [
+    'https://static.gorfactory.es/images/home/Iconos/ILO.png',
+    'https://static.gorfactory.es/images/home/Iconos/ISO%2014001.png',
+    'https://static.gorfactory.es/images/home/Iconos/OEKO%20TEX%20100.png',
+    'https://static.gorfactory.es/images/home/Iconos/GOTS.png',
+    'https://static.gorfactory.es/images/home/Iconos/AEO.png',
+    'https://static.gorfactory.es/images/home/Iconos/ISO%209001.png',
+  ],
+  footerColumns: [
+    { id: 'footer-service', title: 'SERVICE', links: [
+      { id: 'footer-catalog', label: 'Virtual catalog', target: 'page:catalogs', visible: true },
+      { id: 'footer-sizes', label: 'Size guide', target: 'page:sizes_guide', visible: true },
+      { id: 'footer-faq', label: 'Frequently asked questions', target: 'page:faq', visible: true },
+    ] },
+    { id: 'footer-company', title: 'COMPANY', links: [
+      { id: 'footer-quality', label: 'Quality and certifications', target: 'page:quality', visible: true },
+      { id: 'footer-contact', label: 'Contact us', target: 'page:contact', visible: true },
+      { id: 'footer-admin', label: 'Super Admin', target: 'page:admin', visible: true },
+    ] },
+    { id: 'footer-legal', title: 'LEGAL', links: [
+      { id: 'footer-privacy', label: 'Privacy policy', target: 'page:privacy_policy', visible: true },
+      { id: 'footer-terms', label: 'Terms and conditions', target: 'page:terms', visible: true },
+      { id: 'footer-cookies', label: 'Cookies', target: 'page:cookies', visible: true },
+    ] },
+  ],
+};
+
+export const DEFAULT_COMMERCE_SETTINGS: CommerceSettings = {
+  orderPrefix: 'ROLY',
+  lowStockThreshold: 25,
+  stockHoldMinutes: 30,
+  allowBackorders: false,
+  taxInclusivePricing: false,
+  requireTermsAcceptance: true,
+  operationsEmail: 'orders@gorfactory.com',
+  paymentMethods: [
+    {
+      id: 'sepa_30',
+      name: 'SEPA B2B Direct Debit (30 Days Net)',
+      description: 'Approved business accounts are charged on 30-day terms.',
+      enabled: true,
+      type: 'invoice',
+      provider: 'SEPA',
+      feePercent: 0,
+      credentialsConfigured: true,
+    },
+    {
+      id: 'credit_card',
+      name: 'Corporate Credit / Debit Card',
+      description: 'Instant authorization using the configured payment provider.',
+      enabled: true,
+      type: 'gateway',
+      provider: 'Redsys / 3D Secure',
+      publicKey: '',
+      webhookUrl: '/api/payments/webhook',
+      feePercent: 0,
+      credentialsConfigured: false,
+    },
+    {
+      id: 'bank_transfer',
+      name: 'Bank Wire Pre-payment',
+      description: 'The order is released after payment confirmation.',
+      enabled: true,
+      type: 'bank_transfer',
+      provider: 'Bank transfer',
+      instructions: 'Use the order number as the bank transfer reference.',
+      feePercent: 0,
+      credentialsConfigured: true,
+    },
+  ],
+  shippingMethods: [
+    { id: 'gls_express', name: 'GLS Express EuroFreight', description: 'Tracked door-to-door delivery.', enabled: true, carrier: 'GLS Logistics EuroFreight', price: 12.5, freeAbove: 250, estimatedDays: '1–2 business days' },
+    { id: 'dhl_pallet', name: 'DHL EuroConnect Pallet', description: 'Bulk pallet delivery for high-volume orders.', enabled: true, carrier: 'DHL EuroConnect Pallet', price: 45, freeAbove: 1000, estimatedDays: '2–4 business days' },
+    { id: 'alicante_pickup', name: 'Central Hub Pickup', description: 'Collect from the configured warehouse.', enabled: true, carrier: 'Customer pickup', price: 0, freeAbove: 0, estimatedDays: 'Ready in 1 business day' },
+  ],
 };
 
 export const DEFAULT_VENDORS: Vendor[] = [
@@ -138,12 +317,22 @@ export const DEFAULT_VENDORS: Vendor[] = [
   },
 ];
 
+export const DEFAULT_USERS: AppUser[] = [
+  { id: 'owner-1', name: 'Platform Owner', email: 'owner@local.invalid', company: 'ROLY Platform', role: 'super_admin', status: 'active', isBootstrapOwner: true, createdAt: '2026-01-01', lastLogin: new Date().toISOString() },
+  { id: 'admin-1', name: 'Operations Administrator', email: 'admin@local.invalid', company: 'ROLY Operations', role: 'super_admin', status: 'active', isBootstrapOwner: false, createdAt: '2026-02-01' },
+  { id: 'client-1', name: 'María López', email: 'maria@example.com', company: 'Textiles Europa S.L.', role: 'client', status: 'active', isBootstrapOwner: false, createdAt: '2026-05-12' },
+  { id: 'vendor-user-1', name: 'Factory Manager', email: 'factory@example.com', company: 'Gor Factory Direct', role: 'vendor', status: 'active', isBootstrapOwner: false, createdAt: '2026-04-03' },
+  { id: 'logistics-1', name: 'Warehouse Operator', email: 'warehouse@example.com', company: 'ROLY Logistics', role: 'logistics_admin', status: 'active', isBootstrapOwner: false, createdAt: '2026-06-20' },
+];
+
 interface StoreContextType {
   // Navigation
   activePage: ActivePage;
   setActivePage: (page: ActivePage) => void;
   selectedCategorySlug: string;
   setSelectedCategorySlug: (slug: string) => void;
+  selectedSubcategorySlug: string;
+  setSelectedSubcategorySlug: (slug: string) => void;
   selectedModelCode: string;
   setSelectedModelCode: (code: string) => void;
   clientAreaTab: ClientAreaTab;
@@ -157,12 +346,23 @@ interface StoreContextType {
 
   // Roles & Super Admin
   userRole: UserRole;
-  setUserRole: (role: UserRole) => void;
+  currentUser: AppUser;
+  users: AppUser[];
+  registerClient: (user: Pick<AppUser, 'name' | 'email' | 'company'>) => void;
+  updateUserRole: (userId: string, role: UserRole) => boolean;
+  updateUserStatus: (userId: string, status: AppUser['status']) => boolean;
+
+  // Categories are the source for the public parent/submenu tree
+  catalogCategories: CatalogCategory[];
+  setCatalogCategories: React.Dispatch<React.SetStateAction<CatalogCategory[]>>;
+  syncNavigationFromCategories: (categories?: CatalogCategory[]) => void;
 
   // Site Settings & White-Label Customization
   siteSettings: SiteSettings;
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
   resetSiteSettings: () => void;
+  commerceSettings: CommerceSettings;
+  updateCommerceSettings: (settings: CommerceSettings) => void;
 
   // Vendors
   vendors: Vendor[];
@@ -239,23 +439,99 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activePage, setActivePage] = useState<ActivePage>('client_area');
+  const [activePage, setActivePage] = useState<ActivePage>('home');
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>('t_shirts');
+  const [selectedSubcategorySlug, setSelectedSubcategorySlug] = useState<string>('');
   const [selectedModelCode, setSelectedModelCode] = useState<string>('CA6681');
   const [clientAreaTab, setClientAreaTab] = useState<ClientAreaTab>('documents');
   const [documentSubTab, setDocumentSubTab] = useState<DocumentSubTab>('packing_list');
   const [adminTab, setAdminTab] = useState<AdminTab>('dashboard');
   const [trackedOrderId, setTrackedOrderId] = useState<string>('ord-1');
-  const [userRole, setUserRole] = useState<UserRole>('super_admin');
+  const [catalogCategories, setCatalogCategories] = useState<CatalogCategory[]>(() => {
+    const saved = localStorage.getItem('roly_catalog_categories');
+    try { return saved ? JSON.parse(saved) : CATEGORIES; } catch { return CATEGORIES; }
+  });
+  const [users, setUsers] = useState<AppUser[]>(() => {
+    const saved = localStorage.getItem('roly_users');
+    try {
+      const parsed = saved ? JSON.parse(saved) as AppUser[] : DEFAULT_USERS;
+      const withOwner = parsed.some((user) => user.isBootstrapOwner) ? parsed : [DEFAULT_USERS[0], ...parsed];
+      return withOwner.some((user) => user.id === 'admin-1') ? withOwner : [withOwner[0], DEFAULT_USERS[1], ...withOwner.slice(1)];
+    } catch { return DEFAULT_USERS; }
+  });
+  const currentUser = users.find((user) => user.isBootstrapOwner) || DEFAULT_USERS[0];
+  const userRole = currentUser.role;
 
-  const [language, setLanguage] = useState<Language>('EN');
+  const [language, setLanguageState] = useState<Language>(() => {
+    const saved = localStorage.getItem('roly_language');
+    return saved && ['EN', 'ES', 'FR', 'DE', 'IT', 'PT'].includes(saved) ? saved as Language : 'EN';
+  });
+  const setLanguage = (nextLanguage: Language) => {
+    setLanguageState(nextLanguage);
+    localStorage.setItem('roly_language', nextLanguage);
+  };
   const [displayPrices, setDisplayPrices] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Site Settings
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
     const saved = localStorage.getItem('roly_site_settings');
-    return saved ? JSON.parse(saved) : DEFAULT_SITE_SETTINGS;
+    if (!saved) return DEFAULT_SITE_SETTINGS;
+
+    try {
+      const parsed = JSON.parse(saved) as Partial<SiteSettings>;
+      return {
+        ...DEFAULT_SITE_SETTINGS,
+        ...parsed,
+        headerNavigation: (() => {
+          const savedNavigation = parsed.headerNavigation || [];
+          const requiredNavigation = DEFAULT_SITE_SETTINGS.headerNavigation.map((defaultItem) => {
+            const savedItem = savedNavigation.find((item) => item.id === defaultItem.id || item.target === defaultItem.target);
+            return savedItem ? { ...defaultItem, ...savedItem, children: savedItem.children || defaultItem.children } : defaultItem;
+          });
+          const categoryTargets = new Set(CATEGORIES.map((category) => `category:${category.slug}`));
+          const customNavigation = savedNavigation.filter((item) => !DEFAULT_SITE_SETTINGS.headerNavigation.some((defaultItem) => defaultItem.id === item.id || defaultItem.target === item.target) && !categoryTargets.has(item.target));
+          return [...requiredNavigation, ...customNavigation];
+        })(),
+        heroSlides: (() => {
+          const savedSlides = (parsed.heroSlides || []).filter((slide) => slide.id !== 'hero-workwear');
+          const requiredSlides = DEFAULT_SITE_SETTINGS.heroSlides.map((defaultSlide) => savedSlides.find((slide) => slide.id === defaultSlide.id) || defaultSlide);
+          const customSlides = savedSlides.filter((slide) => !DEFAULT_SITE_SETTINGS.heroSlides.some((defaultSlide) => defaultSlide.id === slide.id));
+          return [...requiredSlides, ...customSlides];
+        })(),
+        audienceCards: parsed.audienceCards || DEFAULT_SITE_SETTINGS.audienceCards,
+        latestBanners: parsed.latestBanners || DEFAULT_SITE_SETTINGS.latestBanners,
+        storyCards: parsed.storyCards || DEFAULT_SITE_SETTINGS.storyCards,
+        customizerBanner: { ...DEFAULT_SITE_SETTINGS.customizerBanner, ...parsed.customizerBanner },
+        showCustomizerBanner: parsed.showCustomizerBanner ?? DEFAULT_SITE_SETTINGS.showCustomizerBanner,
+        workwearBanner: { ...DEFAULT_SITE_SETTINGS.workwearBanner, ...parsed.workwearBanner },
+        brandVideoSlides: parsed.brandVideoSlides || DEFAULT_SITE_SETTINGS.brandVideoSlides,
+        workwearVideoUrl: parsed.workwearVideoUrl || DEFAULT_SITE_SETTINGS.workwearVideoUrl,
+        workwearVideoPosterUrl: parsed.workwearVideoPosterUrl || DEFAULT_SITE_SETTINGS.workwearVideoPosterUrl,
+        featuredRolyProductCodes: parsed.featuredRolyProductCodes || DEFAULT_SITE_SETTINGS.featuredRolyProductCodes,
+        featuredWorkwearProductCodes: parsed.featuredWorkwearProductCodes || DEFAULT_SITE_SETTINGS.featuredWorkwearProductCodes,
+        productCarouselIntervalMs: parsed.productCarouselIntervalMs || DEFAULT_SITE_SETTINGS.productCarouselIntervalMs,
+        certificationLogos: parsed.certificationLogos || DEFAULT_SITE_SETTINGS.certificationLogos,
+        footerColumns: parsed.footerColumns || DEFAULT_SITE_SETTINGS.footerColumns,
+      };
+    } catch {
+      return DEFAULT_SITE_SETTINGS;
+    }
+  });
+  const [commerceSettings, setCommerceSettings] = useState<CommerceSettings>(() => {
+    const saved = localStorage.getItem('roly_commerce_settings');
+    if (!saved) return DEFAULT_COMMERCE_SETTINGS;
+    try {
+      const parsed = JSON.parse(saved) as Partial<CommerceSettings>;
+      return {
+        ...DEFAULT_COMMERCE_SETTINGS,
+        ...parsed,
+        paymentMethods: parsed.paymentMethods || DEFAULT_COMMERCE_SETTINGS.paymentMethods,
+        shippingMethods: parsed.shippingMethods || DEFAULT_COMMERCE_SETTINGS.shippingMethods,
+      };
+    } catch {
+      return DEFAULT_COMMERCE_SETTINGS;
+    }
   });
 
   // Vendors
@@ -297,14 +573,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [mysqlConfig, setMysqlConfig] = useState<MySQLConfig>(() => {
     const saved = localStorage.getItem('roly_mysql_config');
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      try { return { ...JSON.parse(saved), connected: false, isInitialized: false }; } catch { /* use safe demo defaults below */ }
+    }
+    return {
       host: 'localhost',
       port: 3306,
       database: 'roly_b2b_ecommerce',
       user: 'roly_admin',
       password: '••••••••••••',
       ssl: true,
-      connected: true,
+      connected: false,
       isInitialized: false,
       firstTimeSetupCompleted: false,
       tablePrefix: 'roly_',
@@ -325,11 +604,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Sync to local storage
   useEffect(() => {
     localStorage.setItem('roly_site_settings', JSON.stringify(siteSettings));
+    document.title = siteSettings.siteTitle;
+    document.documentElement.style.setProperty('--color-primary', siteSettings.primaryColor);
+
+    const existingFavicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (siteSettings.faviconUrl) {
+      const favicon = existingFavicon || document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.href = siteSettings.faviconUrl;
+      if (!existingFavicon) document.head.appendChild(favicon);
+    }
   }, [siteSettings]);
+
+  useEffect(() => {
+    localStorage.setItem('roly_commerce_settings', JSON.stringify(commerceSettings));
+  }, [commerceSettings]);
 
   useEffect(() => {
     localStorage.setItem('roly_vendors', JSON.stringify(vendors));
   }, [vendors]);
+
+  useEffect(() => {
+    localStorage.setItem('roly_catalog_categories', JSON.stringify(catalogCategories));
+  }, [catalogCategories]);
+
+  useEffect(() => {
+    localStorage.setItem('roly_users', JSON.stringify(users));
+  }, [users]);
 
   useEffect(() => {
     localStorage.setItem('roly_products', JSON.stringify(products));
@@ -357,6 +658,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast('Restored default ROLY branding and texts', 'info');
   };
 
+  const updateCommerceSettings = (settings: CommerceSettings) => {
+    setCommerceSettings(settings);
+    showToast('Commerce, payment and delivery settings saved', 'success');
+  };
+
   const addVendor = (vendorData: Omit<Vendor, 'id' | 'totalProducts' | 'totalSales' | 'joinedDate'>) => {
     const newVendor: Vendor = {
       ...vendorData,
@@ -372,6 +678,58 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateVendorStatus = (vendorId: string, status: 'active' | 'pending' | 'suspended') => {
     setVendors(prev => prev.map(v => v.id === vendorId ? { ...v, status } : v));
     showToast(`Vendor status updated to ${status}`, 'info');
+  };
+
+  const syncNavigationFromCategories = (categories: CatalogCategory[] = catalogCategories) => {
+    const customLinks = siteSettings.headerNavigation.filter((item) => item.source !== 'category' && !item.categoryId);
+    setSiteSettings((current) => ({ ...current, headerNavigation: [...buildCategoryNavigation(categories), ...customLinks] }));
+    showToast('Main menu and submenus synced from categories', 'success');
+  };
+
+  const registerClient = (userData: Pick<AppUser, 'name' | 'email' | 'company'>) => {
+    const normalizedEmail = userData.email.trim().toLowerCase();
+    if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
+      showToast('A user with this email already exists', 'error');
+      return;
+    }
+    setUsers((current) => [...current, {
+      ...userData,
+      email: normalizedEmail,
+      id: `user-${Date.now()}`,
+      role: 'client',
+      status: 'active',
+      isBootstrapOwner: false,
+      createdAt: new Date().toISOString().split('T')[0],
+    }]);
+    showToast('User registered as Client. An administrator can change the role later.', 'success');
+  };
+
+  const updateUserRole = (userId: string, role: UserRole): boolean => {
+    const target = users.find((user) => user.id === userId);
+    if (!target) return false;
+    if (target.isBootstrapOwner) {
+      showToast('The protected bootstrap owner cannot be demoted', 'error');
+      return false;
+    }
+    if (role === 'super_admin' && !currentUser.isBootstrapOwner) {
+      showToast('Only the bootstrap owner can grant Super Admin access', 'error');
+      return false;
+    }
+    setUsers((current) => current.map((user) => user.id === userId ? { ...user, role } : user));
+    showToast(`${target.name} is now ${role.replace('_', ' ')}`, 'success');
+    return true;
+  };
+
+  const updateUserStatus = (userId: string, status: AppUser['status']): boolean => {
+    const target = users.find((user) => user.id === userId);
+    if (!target) return false;
+    if (target.isBootstrapOwner) {
+      showToast('The protected bootstrap owner cannot be suspended', 'error');
+      return false;
+    }
+    setUsers((current) => current.map((user) => user.id === userId ? { ...user, status } : user));
+    showToast(`${target.name} status changed to ${status}`, 'info');
+    return true;
   };
 
   const showToast = (message: string, type: 'success' | 'info' | 'warning' | 'error' = 'success') => {
@@ -461,20 +819,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const testMySQLConnection = async (config: Partial<MySQLConfig>): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    const isValid = Boolean(config.host && config.database && config.user);
-    if (isValid) {
+    const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+    try {
+      const response = await fetch(`${apiBase}/health.php`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+      const result = await response.json() as { ok?: boolean; database?: { connected?: boolean; migration?: string | null }; message?: string };
+      if (!response.ok || !result.ok || !result.database?.connected) throw new Error(result.message || 'Database health check failed');
       setMysqlConfig(prev => ({
         ...prev,
         ...config,
+        password: '',
         connected: true,
-        isInitialized: true,
+        isInitialized: Boolean(result.database?.migration),
         lastTested: new Date().toISOString(),
       }));
-      showToast('MySQL Database connected & verified successfully!', 'success');
+      showToast(`Hosting API connected to MySQL${result.database?.migration ? ` · ${result.database.migration}` : ''}`, 'success');
       return true;
-    } else {
-      showToast('MySQL Connection failed: Host and Database are required', 'error');
+    } catch (error) {
+      setMysqlConfig(prev => ({ ...prev, connected: false, isInitialized: false, lastTested: new Date().toISOString() }));
+      showToast(error instanceof Error ? error.message : 'Could not reach the hosting PHP API', 'error');
       return false;
     }
   };
@@ -484,14 +846,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setMysqlConfig(prev => ({
       ...prev,
       ...config,
-      connected: true,
-      isInitialized: true,
+      password: '',
+      connected: false,
+      isInitialized: false,
       firstTimeSetupCompleted: true,
       lastTested: new Date().toISOString(),
     }));
     localStorage.setItem('roly_first_time_mysql_done', 'true');
     setShowFirstTimeWizard(false);
-    showToast('🎉 Database initialized with MySQL schema & demo catalog ready!', 'success');
+    showToast('Configuration saved in demo mode. Use a backend migration to initialize MySQL.', 'info');
   };
 
   const navigateToProduct = (modelCode: string) => {
@@ -501,7 +864,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const navigateToCategory = (slug: string) => {
-    setSelectedCategorySlug(slug);
+    const [categorySlug, subcategorySlug = ''] = slug.split('/');
+    setSelectedCategorySlug(categorySlug);
+    setSelectedSubcategorySlug(subcategorySlug);
     setActivePage('category');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -513,6 +878,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setActivePage,
         selectedCategorySlug,
         setSelectedCategorySlug,
+        selectedSubcategorySlug,
+        setSelectedSubcategorySlug,
         selectedModelCode,
         setSelectedModelCode,
         clientAreaTab,
@@ -524,10 +891,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         trackedOrderId,
         setTrackedOrderId,
         userRole,
-        setUserRole,
+        currentUser,
+        users,
+        registerClient,
+        updateUserRole,
+        updateUserStatus,
+        catalogCategories,
+        setCatalogCategories,
+        syncNavigationFromCategories,
         siteSettings,
         updateSiteSettings,
         resetSiteSettings,
+        commerceSettings,
+        updateCommerceSettings,
         vendors,
         setVendors,
         addVendor,

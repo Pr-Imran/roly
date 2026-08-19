@@ -1,16 +1,37 @@
-import { Product } from '../types';
+import { CatalogCategory, Product, SiteLinkItem } from '../types';
 
-export const CATEGORIES = [
-  { id: 't_shirts', name: 'T-shirts and polo shirts', slug: 't_shirts', sub: ['cam', 'pol', 'sp_tshi', 'sp_polshi', 'pol_w', 'pol_s', 'winter_shirts'] },
-  { id: 'sweaters_jackets', name: 'Sweaters and jackets', slug: 'swe', sub: ['swe_sh', 'swe_h', 'sud_cha', 'cha', 'softshell', 'jack'] },
-  { id: 'coats', name: 'Coats', slug: 'coats', sub: ['subcoats', 'wint_sp', 'chuba', 'windbreak'] },
-  { id: 'trousers', name: 'Trousers', slug: 'sh_pant', sub: ['sh_pant', 'lo_pant', 'leggins', 'chnd'] },
-  { id: 'sports', name: 'Sports collection', slug: 'sports', sub: ['cam_sp', 'sport_accessories', 'fitness', 'equip'] },
-  { id: 'footwear', name: 'Footwear', slug: 'footwear', sub: ['flipflop_caps', 'inw'] },
-  { id: 'eco', name: 'Eco', slug: 'rolyeco', sub: ['green', 'sublimation'] },
-  { id: 'other_products', name: 'Other products', slug: 'other_products', sub: ['acc', 'gor', 'towels_sarong', 'drawstring_bag', 'aprons_mitts', 'sub_bags', 'subbackpacks', 'subcooler_bags', 'summer_cooler_bags', 'novelty', 'hats_bands_scarves', 'neckwarmer', 'moc'] },
-  { id: 'workwear', name: 'Roly WRK', slug: 'workwear', sub: ['highviz', 'industry_services', 'horeca', 'san_est', 'fire_retardant', 'highvispolo', 'highvispantalones', 'highvischalecos', 'servicioschalecos', 'serviciospantalones', 'sanitarypantalon', 'sanitarycasaca', 'sanitarybata', 'horecapantalon', 'horecachaqueta', 'horecadelantal', 'horecacamisas', 'foodindustrygorro'] },
+const subs = (items: Array<[string, string]>) => items.map(([slug, label]) => ({ id: slug, slug, label, visible: true }));
+
+export const CATEGORIES: CatalogCategory[] = [
+  { id: 't_shirts', name: 'T-shirts and polo shirts', slug: 't_shirts', visible: true, subcategories: subs([['cam', 'T-shirts'], ['pol', 'Polo shirts'], ['sp_tshi', 'Technical T-shirts'], ['sp_polshi', 'Technical polo shirts'], ['pol_w', 'Women polo shirts'], ['pol_s', 'Long-sleeve polo shirts'], ['winter_shirts', 'Long-sleeve T-shirts']]) },
+  { id: 'sweaters_jackets', name: 'Sweaters and jackets', slug: 'swe', visible: true, subcategories: subs([['swe_sh', 'Sweatshirts'], ['swe_h', 'Hoodies'], ['sud_cha', 'Zip sweatshirts'], ['cha', 'Gilets'], ['softshell', 'Softshell'], ['jack', 'Jackets']]) },
+  { id: 'coats', name: 'Coats', slug: 'coats', visible: true, subcategories: subs([['subcoats', 'Coats and parkas'], ['wint_sp', 'Padded jackets'], ['chuba', 'Raincoats'], ['windbreak', 'Windbreakers']]) },
+  { id: 'trousers', name: 'Trousers', slug: 'sh_pant', visible: true, subcategories: subs([['sh_pant', 'Short trousers'], ['lo_pant', 'Long trousers'], ['leggins', 'Leggings'], ['chnd', 'Tracksuit bottoms']]) },
+  { id: 'sports', name: 'Sports collection', slug: 'sports', visible: true, subcategories: subs([['cam_sp', 'Sportswear'], ['sport_accessories', 'Sports accessories'], ['fitness', 'Fitness'], ['equip', 'Sports equipment']]) },
+  { id: 'footwear', name: 'Footwear', slug: 'footwear', visible: true, subcategories: subs([['flipflop_caps', 'Flip-flops and casual footwear'], ['inw', 'Work and safety footwear']]) },
+  { id: 'eco', name: 'Eco', slug: 'rolyeco', visible: true, subcategories: subs([['green', 'Organic and recycled'], ['sublimation', 'Sublimation garments']]) },
+  { id: 'other_products', name: 'Other products', slug: 'other_products', visible: true, subcategories: subs([['acc', 'Accessories'], ['gor', 'Caps'], ['towels_sarong', 'Towels and sarongs'], ['drawstring_bag', 'Drawstring bags'], ['aprons_mitts', 'Aprons and mitts'], ['sub_bags', 'Bags'], ['subbackpacks', 'Backpacks'], ['subcooler_bags', 'Cooler bags'], ['summer_cooler_bags', 'Summer accessories'], ['novelty', 'Novelties'], ['hats_bands_scarves', 'Hats, bands and scarves'], ['neckwarmer', 'Neck warmers'], ['moc', 'Socks']]) },
+  { id: 'workwear', name: 'Roly WRK', slug: 'workwear', visible: true, subcategories: subs([['highviz', 'High visibility'], ['industry_services', 'Industry and services'], ['horeca', 'Hospitality'], ['san_est', 'Healthcare and beauty'], ['fire_retardant', 'Flame retardant'], ['highvispolo', 'High visibility polo shirts'], ['highvispantalones', 'High visibility trousers'], ['highvischalecos', 'High visibility vests'], ['servicioschalecos', 'Service vests'], ['serviciospantalones', 'Service trousers'], ['sanitarypantalon', 'Healthcare trousers'], ['sanitarycasaca', 'Healthcare tunics'], ['sanitarybata', 'Healthcare coats'], ['horecapantalon', 'Hospitality trousers'], ['horecachaqueta', 'Hospitality jackets'], ['horecadelantal', 'Hospitality aprons'], ['horecacamisas', 'Hospitality shirts'], ['foodindustrygorro', 'Food-industry headwear']]) },
 ];
+
+export const buildCategoryNavigation = (categories: CatalogCategory[]): SiteLinkItem[] => categories
+  .filter((category) => category.visible)
+  .map((category) => ({
+    id: `nav-category-${category.id}`,
+    label: category.name,
+    target: `category:${category.slug}`,
+    visible: true,
+    source: 'category',
+    categoryId: category.id,
+    children: category.subcategories.map((subcategory) => ({
+      id: `nav-subcategory-${category.id}-${subcategory.id}`,
+      label: subcategory.label,
+      target: `category:${category.slug}/${subcategory.slug}`,
+      visible: subcategory.visible,
+      source: 'category',
+      categoryId: category.id,
+    })),
+  }));
 
 export const MOCK_PRODUCTS: Product[] = [
   {

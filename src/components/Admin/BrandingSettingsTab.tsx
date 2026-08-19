@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../../context/StoreContext';
+import { DEFAULT_SITE_SETTINGS, useStore } from '../../context/StoreContext';
 import { Sliders, Save, RotateCcw, Check, Sparkles, Building, Phone, Mail, DollarSign, Type, Globe } from 'lucide-react';
 
 export const BrandingSettingsTab: React.FC = () => {
@@ -20,6 +20,9 @@ export const BrandingSettingsTab: React.FC = () => {
   const [heroSubhead, setHeroSubhead] = useState(siteSettings.heroSubhead);
   const [heroDescription, setHeroDescription] = useState(siteSettings.heroDescription);
   const [footerDescription, setFooterDescription] = useState(siteSettings.footerDescription);
+  const [logoUrl, setLogoUrl] = useState(siteSettings.logoUrl);
+  const [faviconUrl, setFaviconUrl] = useState(siteSettings.faviconUrl);
+  const [primaryColor, setPrimaryColor] = useState(siteSettings.primaryColor);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,27 +42,33 @@ export const BrandingSettingsTab: React.FC = () => {
       heroSubhead,
       heroDescription,
       footerDescription,
+      logoUrl,
+      faviconUrl,
+      primaryColor,
     });
   };
 
   const handleReset = () => {
     if (window.confirm('Reset all branding texts to original default ROLY European wholesale standard?')) {
       resetSiteSettings();
-      setBrandName('ROLY');
-      setBrandTagline('European Standard in Promotional & Workwear Textiles');
-      setSiteTitle('ROLY - B2B & B2C Textile Commerce Platform');
-      setCompanyName('GOR FACTORY S.A.');
-      setTaxId('ES-A78901234');
-      setAddress('Ctra. Santomera - Abanilla km 8.8, 30620 Fortuna, Murcia (Spain)');
-      setSupportPhone('+34 968 68 70 00');
-      setSupportEmail('info@gorfactory.com');
-      setCurrency('€');
-      setVatRate(21);
-      setHeaderNotice('Official Wholesale Distribution Hub • 24/48h European Logistics Dispatch');
-      setHeroHeadline('The European Standard in Promotional & Workwear Textiles');
-      setHeroSubhead('Official 2026 Wholesale & Multi-Vendor Collection');
-      setHeroDescription('Discover over 200 high-performance apparel models with permanent 35M+ unit inventory at our central logistics hub.');
-      setFooterDescription('ROLY is the registered brand of Gor Factory S.A., premier European manufacturer of promotional garments, sports apparel, corporate workwear, and high-visibility uniforms.');
+      setBrandName(DEFAULT_SITE_SETTINGS.brandName);
+      setBrandTagline(DEFAULT_SITE_SETTINGS.brandTagline);
+      setSiteTitle(DEFAULT_SITE_SETTINGS.siteTitle);
+      setCompanyName(DEFAULT_SITE_SETTINGS.companyName);
+      setTaxId(DEFAULT_SITE_SETTINGS.taxId);
+      setAddress(DEFAULT_SITE_SETTINGS.address);
+      setSupportPhone(DEFAULT_SITE_SETTINGS.supportPhone);
+      setSupportEmail(DEFAULT_SITE_SETTINGS.supportEmail);
+      setCurrency(DEFAULT_SITE_SETTINGS.currency);
+      setVatRate(DEFAULT_SITE_SETTINGS.vatRate);
+      setHeaderNotice(DEFAULT_SITE_SETTINGS.headerNotice);
+      setHeroHeadline(DEFAULT_SITE_SETTINGS.heroHeadline);
+      setHeroSubhead(DEFAULT_SITE_SETTINGS.heroSubhead);
+      setHeroDescription(DEFAULT_SITE_SETTINGS.heroDescription);
+      setFooterDescription(DEFAULT_SITE_SETTINGS.footerDescription);
+      setLogoUrl(DEFAULT_SITE_SETTINGS.logoUrl);
+      setFaviconUrl(DEFAULT_SITE_SETTINGS.faviconUrl);
+      setPrimaryColor(DEFAULT_SITE_SETTINGS.primaryColor);
     }
   };
 
@@ -141,6 +150,25 @@ export const BrandingSettingsTab: React.FC = () => {
                 className="w-full border border-neutral-300 rounded-lg px-3 py-2 text-xs text-neutral-900 outline-none focus:border-black"
               />
             </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-b border-neutral-200 bg-neutral-50/50">
+          <h3 className="text-sm font-black uppercase tracking-wider text-neutral-900 flex items-center space-x-2 mb-4">
+            <Sparkles className="w-4 h-4 text-yellow-500" />
+            <span>Logo, browser icon & brand colour</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <label className="block text-xs font-bold text-neutral-700">Site logo URL
+              <input value={logoUrl} onChange={(event) => setLogoUrl(event.target.value)} placeholder="https://…/logo.svg" className="mt-1 w-full border border-neutral-300 rounded-lg px-3 py-2 text-xs font-normal outline-none focus:border-black" />
+              <span className="mt-1 block text-[10px] font-normal text-neutral-500">Used in the header and footer. Leave empty for the text logo.</span>
+            </label>
+            <label className="block text-xs font-bold text-neutral-700">Favicon URL
+              <input value={faviconUrl} onChange={(event) => setFaviconUrl(event.target.value)} placeholder="https://…/favicon.png" className="mt-1 w-full border border-neutral-300 rounded-lg px-3 py-2 text-xs font-normal outline-none focus:border-black" />
+            </label>
+            <label className="block text-xs font-bold text-neutral-700">Primary brand colour
+              <span className="mt-1 flex gap-2"><input type="color" value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} className="h-9 w-12 rounded border border-neutral-300 bg-white p-1" /><input value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} className="min-w-0 flex-1 border border-neutral-300 rounded-lg px-3 py-2 text-xs font-mono font-normal outline-none focus:border-black" /></span>
+            </label>
           </div>
         </div>
 

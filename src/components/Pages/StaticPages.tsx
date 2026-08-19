@@ -16,7 +16,6 @@ import {
   Award,
   Globe
 } from 'lucide-react';
-import { CATEGORIES } from '../../data/mockProducts';
 
 export const StaticPages: React.FC = () => {
   const { activePage, setActivePage, navigateToProduct, products, showToast } = useStore();

@@ -1,13 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Printer, Download, X, FileText, CheckCircle, Package, Truck, ShieldCheck, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 export const InvoicePackingModal: React.FC = () => {
   const { activeDocumentModal, closeDocumentModal, clientProfile, siteSettings, showToast } = useStore();
   const printRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeDocumentModal();
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [closeDocumentModal]);
 
   if (!activeDocumentModal.isOpen || !activeDocumentModal.order) {
     return null;
@@ -20,41 +32,143 @@ export const InvoicePackingModal: React.FC = () => {
   };
 
   const handleDownloadPdf = async () => {
-    if (!printRef.current) return;
     setIsGeneratingPdf(true);
     showToast('Generating official PDF document...', 'info');
 
     try {
-      const element = printRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      });
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      const margin = 15;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const right = pageWidth - margin;
+      let y = 18;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
+      const ensureSpace = (height: number) => {
+        if (y + height <= pageHeight - 18) return;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        y = 18;
+      };
+
+      const writeWrapped = (text: string, x: number, maxWidth: number, lineHeight = 4) => {
+        const lines = pdf.splitTextToSize(text || '-', maxWidth) as string[];
+        pdf.text(lines, x, y);
+        y += lines.length * lineHeight;
+      };
+
+      pdf.setProperties({
+        title: getDocTitle(),
+        subject: `${type.replace('_', ' ')} for order ${order.orderNumber}`,
+        author: siteSettings.companyName,
+        creator: siteSettings.brandName,
+      });
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(22);
+      pdf.text(siteSettings.brandName.toUpperCase(), margin, y);
+      pdf.setFontSize(12);
+      pdf.text(getDocTitle(), right, y, { align: 'right' });
+      y += 7;
+      pdf.setDrawColor(25, 25, 25);
+      pdf.setLineWidth(0.7);
+      pdf.line(margin, y, right, y);
+      y += 6;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.5);
+      const companyLines = [siteSettings.companyName, siteSettings.address, `VAT / CIF: ${siteSettings.taxId}`, `${siteSettings.supportPhone} | ${siteSettings.supportEmail}`];
+      companyLines.forEach((line) => { pdf.text(line, margin, y); y += 4; });
+      const detailsTop = 31;
+      pdf.text(`Order: ${order.orderNumber}`, right, detailsTop, { align: 'right' });
+      pdf.text(`Reference: ${order.reference || '-'}`, right, detailsTop + 4, { align: 'right' });
+      pdf.text(`Date: ${order.date}`, right, detailsTop + 8, { align: 'right' });
+      y += 3;
+
+      pdf.setFillColor(245, 245, 245);
+      pdf.roundedRect(margin, y, pageWidth - (margin * 2), 31, 2, 2, 'F');
+      const addressTop = y + 6;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('BILLED TO', margin + 4, addressTop);
+      pdf.text('DELIVER TO', 108, addressTop);
+      pdf.setFont('helvetica', 'normal');
+      const billed = [clientProfile.company, `VAT: ${clientProfile.vatNumber}`, order.billingAddress.street, `${order.billingAddress.postalCode} ${order.billingAddress.city}, ${order.billingAddress.country}`];
+      const delivered = [order.shippingAddress.companyName, order.shippingAddress.street, `${order.shippingAddress.postalCode} ${order.shippingAddress.city}, ${order.shippingAddress.country}`, `Carrier: ${order.carrier || '-'}`, `Tracking: ${order.trackingNumber || '-'}`];
+      billed.forEach((line, index) => pdf.text(String(line), margin + 4, addressTop + 5 + (index * 4)));
+      delivered.forEach((line, index) => pdf.text(String(line), 108, addressTop + 5 + (index * 4)));
+      y += 38;
+
+      const drawTableHeader = () => {
+        pdf.setFillColor(30, 30, 30);
+        pdf.rect(margin, y, pageWidth - (margin * 2), 8, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8);
+        pdf.text('MODEL', margin + 2, y + 5);
+        pdf.text('DESCRIPTION / COLOUR', 42, y + 5);
+        pdf.text('SIZE BREAKDOWN', 112, y + 5);
+        pdf.text('QTY', 170, y + 5, { align: 'right' });
+        pdf.text('TOTAL', right - 2, y + 5, { align: 'right' });
+        pdf.setTextColor(25, 25, 25);
+        y += 8;
+      };
+
+      drawTableHeader();
+      pdf.setFontSize(8);
+      order.items.forEach((item) => {
+        const sizes = Object.entries(item.sizeBreakdown).map(([size, quantity]) => `${size}:${quantity}`).join('  ');
+        const descriptionLines = pdf.splitTextToSize(`${item.productName} / ${item.colorName}`, 64) as string[];
+        const sizeLines = pdf.splitTextToSize(sizes || '-', 50) as string[];
+        const rowHeight = Math.max(10, Math.max(descriptionLines.length, sizeLines.length) * 4 + 4);
+        if (y + rowHeight > pageHeight - 32) {
+          pdf.addPage();
+          y = 18;
+          drawTableHeader();
+        }
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(item.modelCode, margin + 2, y + 5);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(descriptionLines, 42, y + 5);
+        pdf.text(sizeLines, 112, y + 5);
+        pdf.text(String(item.totalQuantity), 170, y + 5, { align: 'right' });
+        pdf.text(`${item.totalPrice.toFixed(2)} ${siteSettings.currency}`, right - 2, y + 5, { align: 'right' });
+        pdf.setDrawColor(220, 220, 220);
+        pdf.line(margin, y + rowHeight, right, y + rowHeight);
+        y += rowHeight;
+      });
+
+      ensureSpace(45);
+      y += 7;
+      if (type === 'packing_list') {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`PACKAGING: ${order.totalPieces} pieces | ${order.totalBoxes || 0} boxes | ${order.grossWeightKg} kg gross`, margin, y);
+        y += 8;
       }
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Subtotal`, 145, y);
+      pdf.text(`${order.subtotal.toFixed(2)} ${siteSettings.currency}`, right, y, { align: 'right' });
+      y += 5;
+      pdf.text('Shipping', 145, y);
+      pdf.text(order.shippingCost === 0 ? 'FREE' : `${order.shippingCost.toFixed(2)} ${siteSettings.currency}`, right, y, { align: 'right' });
+      y += 5;
+      pdf.text(`VAT (${siteSettings.vatRate}%)`, 145, y);
+      pdf.text(`${order.taxAmount.toFixed(2)} ${siteSettings.currency}`, right, y, { align: 'right' });
+      y += 6;
+      pdf.setLineWidth(0.5);
+      pdf.line(143, y - 3, right, y - 3);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text('TOTAL', 145, y + 2);
+      pdf.text(`${order.total.toFixed(2)} ${siteSettings.currency}`, right, y + 2, { align: 'right' });
+      y += 14;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      writeWrapped(`Payment: ${order.paymentMethodName || order.paymentStatus}. ${order.notes ? `Order notes: ${order.notes}` : ''}`, margin, 110);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generated ${new Date().toLocaleString()} | ${siteSettings.companyName}`, margin, pageHeight - 10);
 
       const docName = type === 'invoice' 
         ? `Invoice_${order.invoiceNumber || order.orderNumber}.pdf`
@@ -64,12 +178,11 @@ export const InvoicePackingModal: React.FC = () => {
         ? `DeliveryNote_${order.deliveryNoteNumber || order.orderNumber}.pdf`
         : `Proposal_${proposal?.proposalNumber || order.orderNumber}.pdf`;
 
-      pdf.save(docName);
+      pdf.save(docName.replace(/[^a-zA-Z0-9._-]+/g, '_'));
       showToast(`Downloaded ${docName} to your device!`, 'success');
     } catch (err) {
       console.error('Error generating PDF:', err);
-      showToast('Could not download PDF. Printing dialog will open instead.', 'warning');
-      window.print();
+      showToast('Could not download the PDF. Please use Print instead.', 'warning');
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -91,7 +204,15 @@ export const InvoicePackingModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 font-sans">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 font-sans"
+      role="dialog"
+      aria-modal="true"
+      aria-label={getDocTitle()}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeDocumentModal();
+      }}
+    >
       <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full my-8 overflow-hidden border border-gray-200">
         
         {/* Top Control Bar (Hidden on Print) */}
@@ -105,6 +226,12 @@ export const InvoicePackingModal: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-2">
+            <button
+              onClick={closeDocumentModal}
+              className="px-3.5 py-2 border border-neutral-700 hover:border-neutral-500 text-white text-xs font-bold rounded-md transition-colors"
+            >
+              Cancel
+            </button>
             {/* Download PDF Button */}
             <button
               disabled={isGeneratingPdf}
@@ -138,6 +265,8 @@ export const InvoicePackingModal: React.FC = () => {
             <button
               onClick={closeDocumentModal}
               className="p-1.5 text-neutral-400 hover:text-white rounded-md hover:bg-neutral-800 transition-colors cursor-pointer"
+              aria-label="Close document"
+              title="Close"
             >
               <X className="w-5 h-5" />
             </button>
